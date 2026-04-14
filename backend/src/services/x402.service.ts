@@ -68,24 +68,30 @@ export class X402PaymentService {
   private chainId: number;
 
   constructor() {
+    // Safe defaults first so fields are always initialized
+    this.chainId  = parseInt(process.env.X_LAYER_CHAIN_ID || '196');
     this.provider = new ethers.JsonRpcProvider(
       process.env.X_LAYER_RPC_URL || 'https://rpc.xlayer.tech'
     );
-    this.chainId = parseInt(process.env.X_LAYER_CHAIN_ID || '196');
-
-    const usdcAddress = process.env.USDC_CONTRACT_ADDRESS || ethers.ZeroAddress;
     this.usdcContract = new ethers.Contract(
-      usdcAddress,
+      process.env.USDC_CONTRACT_ADDRESS || ethers.ZeroAddress,
       USDC_ABI,
       this.provider
     );
+    // Ephemeral fallback wallet — replaced below if key is valid
+    this.platformWallet = ethers.Wallet.createRandom() as ethers.HDNodeWallet;
 
-    const privateKey = process.env.PLATFORM_PRIVATE_KEY;
-    if (privateKey && privateKey.length >= 64) {
-      this.platformWallet = new ethers.Wallet(privateKey, this.provider);
-    } else {
-      console.warn('PLATFORM_PRIVATE_KEY missing or invalid — using ephemeral wallet (payment settlement disabled)');
-      this.platformWallet = ethers.Wallet.createRandom().connect(this.provider);
+    try {
+      const key = process.env.PLATFORM_PRIVATE_KEY || '';
+      const normalized = key.startsWith('0x') ? key : `0x${key}`;
+      if (normalized.length === 66) {
+        this.platformWallet = new ethers.Wallet(normalized, this.provider);
+        process.stderr.write('[x402] Platform wallet loaded OK\n');
+      } else {
+        process.stderr.write(`[x402] PLATFORM_PRIVATE_KEY invalid length (${normalized.length}), using ephemeral wallet\n`);
+      }
+    } catch (err: any) {
+      process.stderr.write(`[x402] Failed to load platform wallet: ${err?.message}\n`);
     }
   }
 
