@@ -11,7 +11,6 @@
 
 import { Router, Request, Response } from 'express';
 import { z }            from 'zod';
-import slugify          from 'slugify';
 import { prisma }       from '../lib/prisma';
 import { authenticate } from '../middleware/authenticate';
 import { optionalAuthenticate } from '../middleware/authenticate';
@@ -175,8 +174,8 @@ agentsRouter.post('/', authenticate, async (req: Request, res: Response) => {
         pricePerCallUsdc: body.pricePerCallUsdc,
         walletAddress:    agentWallet.address,
         tags:             body.tags || [],
-        inputSchema:      body.inputSchema,
-        outputSchema:     body.outputSchema,
+        inputSchema:      body.inputSchema as any,
+        outputSchema:     body.outputSchema as any,
         status:           'ACTIVE', // Auto-activate for now
       },
     });
