@@ -64,7 +64,7 @@ export interface X402PaymentRequirement {
 export class X402PaymentService {
   private provider: ethers.JsonRpcProvider;
   private usdcContract: ethers.Contract;
-  private platformWallet: ethers.Wallet;
+  private platformWallet: ethers.Wallet | ethers.HDNodeWallet;
   private chainId: number;
 
   constructor() {
