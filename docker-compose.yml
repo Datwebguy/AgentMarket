@@ -1,0 +1,77 @@
+version: '3.9'
+
+services:
+  # PostgreSQL database (local dev only — use Supabase in production)
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER:     agentmarket
+      POSTGRES_PASSWORD: agentmarket_dev
+      POSTGRES_DB:       agentmarket
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agentmarket"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL:            "postgresql://agentmarket:agentmarket_dev@postgres:5432/agentmarket"
+      JWT_SECRET:              "dev-secret-change-in-production-min-32-chars"
+      NODE_ENV:                "development"
+      FRONTEND_URL:            "http://localhost:3000"
+      X_LAYER_RPC_URL:         "https://rpc.xlayer.tech"
+      X_LAYER_CHAIN_ID:        "196"
+      PLATFORM_FEE_BPS:        "500"
+      # Fill these from your OKX developer portal:
+      OKX_API_KEY:             "${OKX_API_KEY}"
+      OKX_SECRET_KEY:          "${OKX_SECRET_KEY}"
+      OKX_PASSPHRASE:          "${OKX_PASSPHRASE}"
+      OKX_PROJECT_ID:          "${OKX_PROJECT_ID}"
+      PLATFORM_PRIVATE_KEY:    "${PLATFORM_PRIVATE_KEY}"
+      PLATFORM_WALLET_ADDRESS: "${PLATFORM_WALLET_ADDRESS}"
+      USDC_CONTRACT_ADDRESS:   "0x74b7F16337b8972027F6196A17a631aC6dE26d22"
+      AGENT_REGISTRY_ADDRESS:  "${AGENT_REGISTRY_ADDRESS}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run dev
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL:           "http://localhost:4000/api/v1"
+      NEXT_PUBLIC_X_LAYER_CHAIN_ID:  "196"
+      NEXT_PUBLIC_X_LAYER_RPC_URL:   "https://rpc.xlayer.tech"
+      NEXT_PUBLIC_X_LAYER_EXPLORER:  "https://www.oklink.com/xlayer"
+      NEXT_PUBLIC_USDC_ADDRESS:      "0x74b7F16337b8972027F6196A17a631aC6dE26d22"
+      NEXT_PUBLIC_REGISTRY_ADDRESS:  "${AGENT_REGISTRY_ADDRESS}"
+      NEXT_PUBLIC_APP_URL:           "http://localhost:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

@@ -1,0 +1,166 @@
+// AgentMarket Database Schema
+// Run: npx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── USERS ─────────────────────────────────────────────────
+model User {
+  id            String    @id @default(uuid())
+  walletAddress String    @unique @map("wallet_address")
+  email         String?   @unique
+  username      String?   @unique
+  bio           String?
+  avatarUrl     String?   @map("avatar_url")
+  role          UserRole  @default(BUILDER)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  agents        Agent[]
+  calls         AgentCall[]
+  nonces        AuthNonce[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  BUILDER
+  CALLER
+  ADMIN
+}
+
+// ─── AUTH NONCES (SIWE) ─────────────────────────────────────
+model AuthNonce {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  nonce     String   @unique
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@map("auth_nonces")
+}
+
+// ─── AGENTS ─────────────────────────────────────────────────
+model Agent {
+  id               String        @id @default(uuid())
+  ownerId          String        @map("owner_id")
+  name             String
+  slug             String        @unique
+  description      String
+  category         AgentCategory
+  endpointUrl      String        @map("endpoint_url")
+  pricePerCallUsdc Decimal       @map("price_per_call_usdc") @db.Decimal(18, 6)
+  walletAddress    String        @unique @map("wallet_address") // OKX TEE wallet
+  contractAddress  String?       @map("contract_address")      // On-chain registry
+  status           AgentStatus   @default(PENDING)
+  isVerified       Boolean       @default(false) @map("is_verified")
+  totalCalls       BigInt        @default(0) @map("total_calls")
+  totalRevenueUsdc Decimal       @default(0) @map("total_revenue_usdc") @db.Decimal(18, 6)
+  avgResponseMs    Int?          @map("avg_response_ms")
+  uptimePct        Decimal       @default(100) @map("uptime_pct") @db.Decimal(5, 2)
+  tags             String[]
+  inputSchema      Json?         @map("input_schema")   // JSON Schema for inputs
+  outputSchema     Json?         @map("output_schema")  // JSON Schema for outputs
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  owner            User          @relation(fields: [ownerId], references: [id])
+  calls            AgentCall[]
+  reviews          AgentReview[]
+
+  @@index([category])
+  @@index([status])
+  @@index([totalCalls])
+  @@map("agents")
+}
+
+enum AgentCategory {
+  DEFI
+  RISK
+  TRADING
+  INTELLIGENCE
+  PAYMENTS
+  INFRASTRUCTURE
+  OTHER
+}
+
+enum AgentStatus {
+  PENDING      // Awaiting verification
+  ACTIVE       // Live and callable
+  SUSPENDED    // Temporarily disabled
+  DEPRECATED   // Permanently retired
+}
+
+// ─── AGENT CALLS (every x402 transaction) ──────────────────
+model AgentCall {
+  id              String      @id @default(uuid())
+  agentId         String      @map("agent_id")
+  callerId        String?     @map("caller_id")     // null = anonymous
+  callerWallet    String      @map("caller_wallet")
+  txHash          String?     @unique @map("tx_hash")  // X Layer tx hash
+  amountUsdc      Decimal     @map("amount_usdc") @db.Decimal(18, 6)
+  platformFeeUsdc Decimal     @map("platform_fee_usdc") @db.Decimal(18, 6)
+  agentEarnedUsdc Decimal     @map("agent_earned_usdc") @db.Decimal(18, 6)
+  inputPayload    Json        @map("input_payload")
+  outputPayload   Json?       @map("output_payload")
+  responseMs      Int?        @map("response_ms")
+  status          CallStatus  @default(PENDING)
+  errorMessage    String?     @map("error_message")
+  blockNumber     BigInt?     @map("block_number")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  settledAt       DateTime?   @map("settled_at")
+
+  agent           Agent       @relation(fields: [agentId], references: [id])
+  caller          User?       @relation(fields: [callerId], references: [id])
+
+  @@index([agentId])
+  @@index([callerWallet])
+  @@index([createdAt])
+  @@index([status])
+  @@map("agent_calls")
+}
+
+enum CallStatus {
+  PENDING     // Payment auth received, not yet executed
+  EXECUTING   // Agent running
+  COMPLETED   // Success
+  FAILED      // Agent error
+  REFUNDED    // Payment reversed
+}
+
+// ─── REVIEWS ────────────────────────────────────────────────
+model AgentReview {
+  id        String   @id @default(uuid())
+  agentId   String   @map("agent_id")
+  reviewerId String  @map("reviewer_id")
+  callId    String?  @map("call_id")
+  rating    Int      // 1-5
+  body      String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  agent     Agent    @relation(fields: [agentId], references: [id])
+
+  @@unique([agentId, reviewerId])
+  @@map("agent_reviews")
+}
+
+// ─── PLATFORM STATS (aggregated) ────────────────────────────
+model PlatformStat {
+  id               String   @id @default(uuid())
+  date             DateTime @unique @db.Date
+  totalCalls       BigInt   @default(0) @map("total_calls")
+  totalVolumeUsdc  Decimal  @default(0) @map("total_volume_usdc") @db.Decimal(18, 6)
+  uniqueCallers    Int      @default(0) @map("unique_callers")
+  activeAgents     Int      @default(0) @map("active_agents")
+
+  @@map("platform_stats")
+}
