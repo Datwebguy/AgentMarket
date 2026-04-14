@@ -1,3 +1,14 @@
+// ─── EARLY CRASH LOGGING ─────────────────────────────────────
+process.stderr.write('[startup] AgentMarket process starting...\n');
+process.on('uncaughtException', (err) => {
+  process.stderr.write(`[CRASH] uncaughtException: ${err?.stack || err}\n`);
+  process.exit(1);
+});
+process.on('unhandledRejection', (reason) => {
+  process.stderr.write(`[CRASH] unhandledRejection: ${reason}\n`);
+  process.exit(1);
+});
+
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
