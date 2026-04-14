@@ -47,7 +47,7 @@ export function Navbar() {
       });
 
       const messageStr = message.prepareMessage();
-      const signature  = await signMessageAsync({ message: messageStr });
+      const signature  = await signMessageAsync({ account: walletAddress as `0x${string}`, message: messageStr });
 
       // Verify with backend, get JWT
       const { token: jwt, user: u } = await api.verifySiwe(messageStr, signature);
