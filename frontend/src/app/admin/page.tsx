@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
-import { api } from '../../lib/api';
+import { api, PlatformStats } from '../../lib/api';
 import { useAuthStore } from '../../hooks/useAuthStore';
 
 // Admin wallets — add your wallet address here
@@ -13,14 +13,6 @@ const ADMIN_WALLETS = [
 ].map(a => a.toLowerCase());
 
 type AdminTab = 'overview' | 'agents' | 'calls' | 'leaderboard';
-
-interface PlatformStats {
-  totalAgents: number;
-  totalCalls: number;
-  totalVolumeUsdc: string;
-  uniqueCallers: number;
-  avgResponseMs: number;
-}
 
 export default function AdminPage() {
   const { address } = useAccount();

@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
-import { api } from '../../lib/api';
+import { api, PlatformStats } from '../../lib/api';
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
@@ -19,7 +19,7 @@ export default function DashboardPage() {
     enabled:  isConnected,
   });
 
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<PlatformStats>({
     queryKey: ['platform-stats'],
     queryFn:  api.getPlatformStats.bind(api),
   });

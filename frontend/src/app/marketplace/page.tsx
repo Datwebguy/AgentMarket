@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { api, Agent } from '../../lib/api';
+import { api, Agent, PlatformStats } from '../../lib/api';
 import { AgentCard }  from '../../components/AgentCard';
 import { CallModal }  from '../../components/CallModal';
 
@@ -26,7 +26,7 @@ export default function MarketplacePage() {
     }),
   });
 
-  const { data: stats } = useQuery({
+  const { data: stats } = useQuery<PlatformStats>({
     queryKey: ['platform-stats'],
     queryFn:  api.getPlatformStats.bind(api),
     staleTime: 60_000,
