@@ -1,8 +1,6 @@
-'use client';
-
 import type { Metadata } from 'next';
 import { Providers }  from './providers';
-import { Analytics }  from '../lib/analytics';
+import { Analytics }  from '../lib/analytics.tsx';
 import './globals.css';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://agentmarket.xyz';
