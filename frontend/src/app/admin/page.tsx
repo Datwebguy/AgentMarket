@@ -14,6 +14,14 @@ const ADMIN_WALLETS = [
 
 type AdminTab = 'overview' | 'agents' | 'calls' | 'leaderboard';
 
+interface PlatformStats {
+  totalAgents: number;
+  totalCalls: number;
+  totalVolumeUsdc: string;
+  uniqueCallers: number;
+  avgResponseMs: number;
+}
+
 export default function AdminPage() {
   const { address } = useAccount();
   const { user } = useAuthStore();
@@ -27,7 +35,7 @@ export default function AdminPage() {
 
   const qc = useQueryClient();
 
-  const { data: stats }       = useQuery({ queryKey: ['admin-stats'],       queryFn: api.getPlatformStats.bind(api), enabled: !!isAdmin });
+  const { data: stats }       = useQuery<PlatformStats>({ queryKey: ['admin-stats'],       queryFn: api.getPlatformStats.bind(api) as () => Promise<PlatformStats>, enabled: !!isAdmin });
   const { data: agentData }   = useQuery({ queryKey: ['admin-agents'],      queryFn: () => api.listAgents({ limit: 50, sort: 'createdAt', order: 'desc' }), enabled: !!isAdmin && tab === 'agents' });
   const { data: lbData }      = useQuery({ queryKey: ['admin-leaderboard'], queryFn: () => api.getLeaderboard('calls', 20), enabled: !!isAdmin && tab === 'leaderboard' });
   const { data: callsData }   = useQuery({ queryKey: ['admin-calls'],       queryFn: () => api.listCalls({ limit: 30 }), enabled: !!isAdmin && tab === 'calls' });
