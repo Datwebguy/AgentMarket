@@ -11,7 +11,7 @@ export const statsRouter = Router();
 
 statsRouter.get('/platform', async (_req: Request, res: Response) => {
   try {
-    const [totalAgents, totalCallsResult, totalVolumeResult, uniqueCallersResult] =
+    const [totalAgents, totalCallsResult, uniqueCallersResult, avgResult] =
       await Promise.all([
         prisma.agent.count({ where: { status: 'ACTIVE' } }),
         prisma.agentCall.aggregate({
@@ -35,9 +35,7 @@ statsRouter.get('/platform', async (_req: Request, res: Response) => {
       totalCalls:        totalCallsResult._count,
       totalVolumeUsdc:   totalCallsResult._sum.amountUsdc?.toString() || '0',
       uniqueCallers:     uniqueCallersResult.length,
-      avgResponseMs:     Math.round(uniqueCallersResult.length > 0
-                           ? (totalVolumeResult._avg.responseMs || 0)
-                           : 0),
+      avgResponseMs:     Math.round(avgResult._avg.responseMs || 0),
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch platform stats' });
