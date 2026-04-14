@@ -73,16 +73,20 @@ export class X402PaymentService {
     );
     this.chainId = parseInt(process.env.X_LAYER_CHAIN_ID || '196');
 
+    const usdcAddress = process.env.USDC_CONTRACT_ADDRESS || ethers.ZeroAddress;
     this.usdcContract = new ethers.Contract(
-      process.env.USDC_CONTRACT_ADDRESS!,
+      usdcAddress,
       USDC_ABI,
       this.provider
     );
 
-    this.platformWallet = new ethers.Wallet(
-      process.env.PLATFORM_PRIVATE_KEY!,
-      this.provider
-    );
+    const privateKey = process.env.PLATFORM_PRIVATE_KEY;
+    if (privateKey && privateKey.length >= 64) {
+      this.platformWallet = new ethers.Wallet(privateKey, this.provider);
+    } else {
+      console.warn('PLATFORM_PRIVATE_KEY missing or invalid — using ephemeral wallet (payment settlement disabled)');
+      this.platformWallet = ethers.Wallet.createRandom().connect(this.provider);
+    }
   }
 
   /**
