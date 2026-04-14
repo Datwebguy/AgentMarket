@@ -79,18 +79,21 @@ app.use(errorHandler);
 
 // ─── START ──────────────────────────────────────────────────
 async function main() {
+  // Bind to port FIRST so Railway health checks pass immediately
+  await new Promise<void>((resolve) => {
+    app.listen(Number(PORT), '0.0.0.0', () => {
+      console.log(`✓ AgentMarket API running on http://0.0.0.0:${PORT}`);
+      console.log(`  Environment: ${process.env.NODE_ENV}`);
+      resolve();
+    });
+  });
+
+  // Then connect to DB (non-blocking for startup)
   try {
     await prisma.$connect();
     console.log('✓ Database connected');
-
-    app.listen(PORT, () => {
-      console.log(`✓ AgentMarket API running on http://localhost:${PORT}`);
-      console.log(`  Environment: ${process.env.NODE_ENV}`);
-      console.log(`  X Layer RPC: ${process.env.X_LAYER_RPC_URL}`);
-    });
   } catch (err) {
-    console.error('Failed to start server:', err);
-    process.exit(1);
+    console.error('DB connect failed (will retry on first request):', err);
   }
 }
 
