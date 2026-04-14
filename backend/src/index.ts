@@ -1,65 +1,58 @@
-// ─── EARLY CRASH LOGGING ─────────────────────────────────────
-process.stderr.write('[startup] AgentMarket process starting...\n');
-process.on('uncaughtException', (err) => {
-  process.stderr.write(`[CRASH] uncaughtException: ${err?.stack || err}\n`);
-  process.exit(1);
-});
-process.on('unhandledRejection', (reason) => {
-  process.stderr.write(`[CRASH] unhandledRejection: ${reason}\n`);
-  process.exit(1);
-});
-
 import 'dotenv/config';
+console.log('[app] modules loading...');
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 
-import { authRouter } from './routes/auth';
+console.log('[app] express loaded');
+
+import { authRouter }   from './routes/auth';
 import { agentsRouter } from './routes/agents';
-import { callsRouter } from './routes/calls';
-import { userRouter } from './routes/users';
-import { statsRouter } from './routes/stats';
+import { callsRouter }  from './routes/calls';
+import { userRouter }   from './routes/users';
+import { statsRouter }  from './routes/stats';
 import { errorHandler } from './middleware/errorHandler';
-import { prisma } from './lib/prisma';
+import { prisma }       from './lib/prisma';
+
+console.log('[app] all routes loaded');
 
 const app = express();
-const PORT = process.env.PORT || 4000;
 
 // ─── SECURITY ───────────────────────────────────────────────
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || '*',
   credentials: true,
 }));
 
 // ─── RATE LIMITING ──────────────────────────────────────────
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 200,
   message: { error: 'Too many requests, please try again later.' },
 });
 app.use('/api/', limiter);
 
-// Stricter limit for x402 call execution
 const callLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
+  windowMs: 60 * 1000,
   max: 30,
   message: { error: 'Call rate limit exceeded.' },
 });
 
 // ─── BODY PARSING ───────────────────────────────────────────
 app.use(express.json({ limit: '1mb' }));
-app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use(morgan('combined'));
 
-// ─── HEALTH CHECK ───────────────────────────────────────────
+// ─── HEALTH / ROOT ──────────────────────────────────────────
+app.get('/', (_req, res) => {
+  res.json({ status: 'ok', service: 'AgentMarket API', version: '1.0.0' });
+});
+
 app.get('/health', (_req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0',
-  });
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.0.0' });
 });
 
 // ─── ROUTES ─────────────────────────────────────────────────
@@ -77,30 +70,19 @@ app.use((_req, res) => {
 // ─── ERROR HANDLER ──────────────────────────────────────────
 app.use(errorHandler);
 
-// ─── START ──────────────────────────────────────────────────
-async function main() {
-  // Bind to port FIRST so Railway health checks pass immediately
-  await new Promise<void>((resolve) => {
-    app.listen(Number(PORT), '0.0.0.0', () => {
-      console.log(`✓ AgentMarket API running on http://0.0.0.0:${PORT}`);
-      console.log(`  Environment: ${process.env.NODE_ENV}`);
-      resolve();
-    });
-  });
+// ─── DB CONNECT (non-blocking) ──────────────────────────────
+console.log('[app] connecting to database...');
+prisma.$connect()
+  .then(() => console.log('[app] database connected'))
+  .catch((err) => console.error('[app] database connect failed (non-fatal):', err?.message || err));
 
-  // Then connect to DB (non-blocking for startup)
-  try {
-    await prisma.$connect();
-    console.log('✓ Database connected');
-  } catch (err) {
-    console.error('DB connect failed (will retry on first request):', err);
-  }
-}
-
-main();
+// ─── EXPORT for start.js ────────────────────────────────────
+export { app };
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   await prisma.$disconnect();
   process.exit(0);
 });
+
+console.log('[app] setup complete, app exported');
