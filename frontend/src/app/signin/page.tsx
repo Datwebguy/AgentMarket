@@ -55,7 +55,7 @@ export default function SignInPage() {
       const msg = message.prepareMessage();
 
       // 4. Sign
-      const signature = await signMessageAsync({ message: msg });
+      const signature = await signMessageAsync({ account: walletAddress as `0x${string}`, message: msg });
 
       setStep('verifying');
 
