@@ -1,6 +1,8 @@
 FROM node:20-slim
 
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y && apt-get install -y openssl libssl-dev && rm -rf /var/lib/apt/lists/*
+
+ENV PRISMA_QUERY_ENGINE_TYPE=binary
 
 WORKDIR /app
 
