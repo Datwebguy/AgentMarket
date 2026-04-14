@@ -98,7 +98,7 @@ export function useX402Payment(): UseX402Result {
         } as const;
 
         // Request signature from connected wallet
-        const signature = await signTypedDataAsync({ domain, types, message });
+        const signature = await signTypedDataAsync({ account: address, domain, types, message });
 
         // Parse v, r, s from signature
         const sig = ethers.Signature.from(signature);
