@@ -209,9 +209,14 @@ agentsRouter.patch('/:id', authenticate, async (req: Request, res: Response) => 
     }
 
     const body = updateSchema.parse(req.body);
+    const { inputSchema, outputSchema, ...rest } = body;
     const updated = await prisma.agent.update({
       where: { id: req.params.id },
-      data:  body,
+      data:  {
+        ...rest,
+        ...(inputSchema  !== undefined && { inputSchema:  inputSchema  as any }),
+        ...(outputSchema !== undefined && { outputSchema: outputSchema as any }),
+      },
     });
 
     return res.json(updated);
