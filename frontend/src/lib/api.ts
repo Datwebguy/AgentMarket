@@ -6,7 +6,8 @@
 
 import axios, { AxiosInstance } from 'axios';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://agentmarket-production-e911.up.railway.app/api/v1';
+// NEXT_PUBLIC_* vars can fail to embed in Vercel builds; hardcode as the definitive fallback
+const BASE_URL = 'https://agentmarket-production-e911.up.railway.app/api/v1';
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 
