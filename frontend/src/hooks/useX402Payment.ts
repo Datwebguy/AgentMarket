@@ -54,7 +54,7 @@ export function useX402Payment(): UseX402Result {
     async (agentWalletAddress: string, priceUsdc: string): Promise<string> => {
       if (!address) throw new Error('Wallet not connected');
 
-      setIssigning(true);
+      setIsSigning(true);
       setError(null);
 
       try {
