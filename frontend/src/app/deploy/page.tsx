@@ -184,7 +184,7 @@ export default function DeployPage() {
     <>
       <Navbar />
       <main style={{ minHeight: '100vh', background: '#080808', color: '#fff', fontFamily: "'Figtree', sans-serif" }}>
-        <div style={{ borderBottom: '1px solid rgba(255,255,255,.06)', padding: '24px 32px' }}>
+        <div className="deploy-header" style={{ borderBottom: '1px solid rgba(255,255,255,.06)', padding: '24px 32px' }}>
           <a href="/marketplace" style={{ fontSize: 13, color: '#666', textDecoration: 'none' }}>← Back to Marketplace</a>
           <h1 style={{ fontWeight: 900, fontSize: 28, letterSpacing: '-1px', marginTop: 8 }}>Deploy an Agent</h1>
           <p style={{ fontSize: 14, color: '#555', marginTop: 4 }}>
@@ -192,7 +192,7 @@ export default function DeployPage() {
           </p>
         </div>
 
-        <div style={{ maxWidth: 780, margin: '0 auto', padding: '40px 32px' }}>
+        <div className="deploy-body" style={{ maxWidth: 780, margin: '0 auto', padding: '40px 32px' }}>
 
           {/* Auth warning */}
           {(!isConnected || !token) && step === 'form' && (
@@ -226,7 +226,7 @@ export default function DeployPage() {
                 {mode === 'code' && (
                   <div>
                     <label style={lbl}>Start from a template</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+                    <div className="deploy-template-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
                       {Object.entries(TEMPLATES).map(([key, t]) => (
                         <button key={key} type="button" onClick={() => applyTemplate(key)} style={{
                           padding: '10px 8px', borderRadius: 8, border: `1px solid ${template === key ? '#f97316' : 'rgba(255,255,255,.08)'}`,
@@ -243,7 +243,7 @@ export default function DeployPage() {
                 )}
 
                 {/* Name + Category */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div className="deploy-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div>
                     <label style={lbl}>Agent Name *</label>
                     <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
@@ -305,7 +305,7 @@ export default function DeployPage() {
                 )}
 
                 {/* Price + Tags */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div className="deploy-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                   <div>
                     <label style={lbl}>Price Per Call (USDC) *</label>
                     <input type="number" step="0.0001" min="0.0001" max="100"
@@ -321,7 +321,7 @@ export default function DeployPage() {
                 </div>
 
                 {/* Earnings summary */}
-                <div style={{ background: '#111', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ background: '#111', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10, padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                   <div style={{ fontSize: 13, color: '#666' }}>You earn per call</div>
                   <div style={{ fontSize: 18, fontWeight: 900, color: '#00d4a0' }}>
                     {(parseFloat(form.pricePerCallUsdc || '0') * 0.95).toFixed(5)} USDC

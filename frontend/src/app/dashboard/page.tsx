@@ -52,20 +52,20 @@ export default function DashboardPage() {
     <>
     <Navbar />
     <main style={{ minHeight: '100vh', background: '#080808', color: '#fff', fontFamily: "'Figtree', sans-serif" }}>
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,.06)', padding: '20px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div className="dash-header" style={{ borderBottom: '1px solid rgba(255,255,255,.06)', padding: '20px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h1 style={{ fontWeight: 900, fontSize: 22, letterSpacing: '-1px' }}>Dashboard</h1>
-          <p style={{ fontSize: 11, color: '#555', fontFamily: 'monospace', marginTop: 2 }}>{address}</p>
+          <p style={{ fontSize: 11, color: '#555', fontFamily: 'monospace', marginTop: 2, wordBreak: 'break-all' }}>{address}</p>
         </div>
-        <a href="/deploy" style={{ background: '#f97316', color: '#fff', border: 'none', borderRadius: 999, padding: '9px 20px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+        <a href="/deploy" style={{ background: '#f97316', color: '#fff', border: 'none', borderRadius: 999, padding: '9px 20px', fontSize: 13, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
           + Deploy Agent
         </a>
       </div>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 32px' }}>
+      <div className="dash-body" style={{ maxWidth: 1100, margin: '0 auto', padding: '40px 32px' }}>
 
         {/* ── STAT CARDS ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 40 }}>
+        <div className="dash-stat-strip" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 40 }}>
           {[
             { label: 'Total Earnings', value: `$${totalEarnings.toFixed(4)}`, unit: 'USDC', color: '#00d4a0' },
             { label: 'Total Calls',    value: totalCalls.toLocaleString(), unit: 'all time', color: '#f97316' },
@@ -119,34 +119,35 @@ export default function DashboardPage() {
         <div>
           <h2 style={{ fontWeight: 900, fontSize: 18, letterSpacing: '-.5px', marginBottom: 16 }}>Recent Calls</h2>
           <div style={{ background: '#101010', border: '1px solid rgba(255,255,255,.06)', borderRadius: 14, overflow: 'hidden' }}>
-            {/* Header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px 120px 100px', gap: 0, padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,.04)', fontSize: 10, color: '#444', fontFamily: 'monospace', letterSpacing: '1px', textTransform: 'uppercase' }}>
-              <span>Agent</span><span>Tx Hash</span><span>Amount</span><span>Status</span><span>Time</span>
-            </div>
             {calls?.calls?.length === 0 ? (
               <div style={{ padding: '32px', textAlign: 'center', color: '#444', fontSize: 13 }}>No calls yet</div>
             ) : (
-              calls?.calls?.map(call => (
-                <div key={call.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px 120px 100px', gap: 0, padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,.03)', fontSize: 13, alignItems: 'center' }}>
-                  <span style={{ fontWeight: 600, color: '#ccc' }}>{call.agent?.name || '—'}</span>
-                  <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#f97316' }}>
-                    {call.txHash ? `${call.txHash.slice(0, 10)}...` : '—'}
-                  </span>
-                  <span style={{ color: '#00d4a0', fontWeight: 600 }}>{parseFloat(call.amountUsdc?.toString() || '0').toFixed(4)} USDC</span>
-                  <span style={{ fontSize: 11 }}>
-                    <span style={{
-                      padding: '2px 8px', borderRadius: 4,
-                      background: call.status === 'COMPLETED' ? 'rgba(34,197,94,.1)' : call.status === 'FAILED' ? 'rgba(239,68,68,.1)' : 'rgba(255,255,255,.06)',
-                      color: call.status === 'COMPLETED' ? '#22c55e' : call.status === 'FAILED' ? '#ef4444' : '#888',
-                    }}>
-                      {call.status}
-                    </span>
-                  </span>
-                  <span style={{ fontSize: 11, color: '#444' }}>
-                    {new Date(call.createdAt).toLocaleDateString()}
-                  </span>
+              <div className="dash-calls-list">
+                {/* Desktop table header */}
+                <div className="dash-calls-header" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 110px 90px', gap: 0, padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,.04)', fontSize: 10, color: '#444', fontFamily: 'monospace', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  <span>Agent</span><span>Tx Hash</span><span>Amount</span><span>Status</span><span>Time</span>
                 </div>
-              ))
+                {calls?.calls?.map(call => (
+                  <div key={call.id} style={{ borderBottom: '1px solid rgba(255,255,255,.03)' }}>
+                    {/* Desktop row */}
+                    <div className="dash-calls-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 130px 110px 90px', gap: 0, padding: '12px 20px', fontSize: 13, alignItems: 'center' }}>
+                      <span style={{ fontWeight: 600, color: '#ccc' }}>{call.agent?.name || '—'}</span>
+                      <span style={{ fontFamily: 'monospace', fontSize: 11 }}>
+                        {call.txHash
+                          ? <a href={`${process.env.NEXT_PUBLIC_X_LAYER_EXPLORER || 'https://www.oklink.com/xlayer'}/tx/${call.txHash}`} target="_blank" rel="noopener noreferrer" style={{ color: '#f97316', textDecoration: 'none' }}>{call.txHash.slice(0, 10)}...↗</a>
+                          : <span style={{ color: '#555' }}>—</span>}
+                      </span>
+                      <span style={{ color: '#00d4a0', fontWeight: 600 }}>{parseFloat(call.amountUsdc?.toString() || '0').toFixed(4)} USDC</span>
+                      <span style={{ fontSize: 11 }}>
+                        <span style={{ padding: '2px 8px', borderRadius: 4, background: call.status === 'COMPLETED' ? 'rgba(34,197,94,.1)' : call.status === 'FAILED' ? 'rgba(239,68,68,.1)' : 'rgba(255,255,255,.06)', color: call.status === 'COMPLETED' ? '#22c55e' : call.status === 'FAILED' ? '#ef4444' : '#888' }}>
+                          {call.status}
+                        </span>
+                      </span>
+                      <span style={{ fontSize: 11, color: '#444' }}>{new Date(call.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>

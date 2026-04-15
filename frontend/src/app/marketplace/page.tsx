@@ -61,9 +61,9 @@ export default function MarketplacePage() {
       <main style={{ minHeight: '100vh', background: '#080808', color: '#fff', fontFamily: "'Figtree', sans-serif" }}>
 
         {/* PAGE HEADER */}
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 32px 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+        <div className="mkt-header" style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 32px 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <h1 style={{ fontWeight: 900, fontSize: 32, letterSpacing: '-1px', color: '#fff', margin: 0 }}>Marketplace</h1>
+            <h1 className="mkt-h1" style={{ fontWeight: 900, fontSize: 32, letterSpacing: '-1px', color: '#fff', margin: 0 }}>Marketplace</h1>
             <p style={{ fontSize: 14, color: '#555', fontWeight: 400, margin: '4px 0 0' }}>
               {stats
                 ? `${stats.totalAgents} agents live · ${stats.totalCalls?.toLocaleString()} calls today`
@@ -77,15 +77,15 @@ export default function MarketplacePage() {
 
         {/* STATS STRIP */}
         {stats && (
-          <div style={{ maxWidth: 1200, margin: '24px auto 0', padding: '0 32px' }}>
-            <div style={{ display: 'flex', border: '1px solid rgba(255,255,255,.06)', borderRadius: 14, background: '#101010', overflow: 'hidden' }}>
+          <div className="mkt-stats" style={{ maxWidth: 1200, margin: '24px auto 0', padding: '0 32px' }}>
+            <div className="mkt-stats-inner" style={{ display: 'flex', border: '1px solid rgba(255,255,255,.06)', borderRadius: 14, background: '#101010', overflow: 'hidden' }}>
               {[
                 { label: 'Agents Live',    value: stats.totalAgents,                                         color: '#f97316' },
                 { label: 'Calls Today',    value: stats.totalCalls?.toLocaleString(),                        color: '#00d4a0' },
                 { label: 'Volume Settled', value: `$${parseFloat(stats.totalVolumeUsdc || '0').toFixed(2)}`, color: '#fff'    },
                 { label: 'Avg Response',   value: `${stats.avgResponseMs || 0}ms`,                           color: '#fff'    },
               ].map((s, i, arr) => (
-                <div key={s.label} style={{ flex: 1, padding: '16px 24px', borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,.06)' : 'none', textAlign: 'center' }}>
+                <div key={s.label} className="mkt-stat-item" style={{ flex: 1, padding: '16px 24px', borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,.06)' : 'none', textAlign: 'center' }}>
                   <div style={{ fontWeight: 900, fontSize: 22, letterSpacing: '-1px', lineHeight: 1, marginBottom: 4, color: s.color }}>{s.value}</div>
                   <div style={{ fontSize: 11, color: '#444', fontFamily: 'monospace', letterSpacing: '.5px', textTransform: 'uppercase' }}>{s.label}</div>
                 </div>
@@ -95,10 +95,10 @@ export default function MarketplacePage() {
         )}
 
         {/* FILTERS */}
-        <div style={{ maxWidth: 1200, margin: '24px auto 0', padding: '0 32px', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="mkt-filters" style={{ maxWidth: 1200, margin: '24px auto 0', padding: '0 32px', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
 
           {/* Search */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#111', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, padding: '0 14px', minWidth: 220, height: 38 }}>
+          <div className="mkt-search" style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#111', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, padding: '0 14px', minWidth: 220, height: 38 }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" style={{ flexShrink: 0 }}>
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
@@ -138,6 +138,7 @@ export default function MarketplacePage() {
           <select
             value={sort}
             onChange={e => setSort(e.target.value)}
+            className="mkt-sort"
             style={{ background: '#111', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, padding: '0 14px', color: '#888', fontFamily: "'Figtree', sans-serif", fontSize: 13, outline: 'none', cursor: 'pointer', height: 38, marginLeft: 'auto' }}
           >
             {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -145,11 +146,11 @@ export default function MarketplacePage() {
         </div>
 
         {/* CONTENT */}
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 32px 80px' }}>
+        <div className="mkt-content" style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 32px 80px' }}>
 
           {/* Loading skeletons */}
           {isLoading && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
+            <div className="mkt-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} style={{ background: '#101010', border: '1px solid rgba(255,255,255,.06)', borderRadius: 16, padding: 22, minHeight: 200 }}>
                   <div style={{ background: 'rgba(255,255,255,.05)', borderRadius: 6, height: 14, width: '40%', marginBottom: 14 }} />
@@ -224,7 +225,7 @@ export default function MarketplacePage() {
                 </span>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
+              <div className="mkt-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
                 {data.agents.map(agent => (
                   <AgentCard key={agent.id} agent={agent} onCall={() => setSelected(agent)} />
                 ))}
