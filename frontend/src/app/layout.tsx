@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Providers }  from './providers';
 import { Analytics }  from '../lib/analytics';
+import { Footer }     from '../components/Footer';
 import './globals.css';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://agentmarket.xyz';
@@ -49,6 +50,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body>
         <Providers>{children}</Providers>
+        <Footer />
         <Analytics />
       </body>
     </html>

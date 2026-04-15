@@ -53,8 +53,11 @@ export interface AgentCall {
   platformFeeUsdc: string;
   responseMs:      number | null;
   status:          'PENDING' | 'EXECUTING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
+  errorMessage:    string | null;
   createdAt:       string;
   settledAt:       string | null;
+  inputPayload?:   unknown;
+  outputPayload?:  unknown;
   agent?: Partial<Agent>;
 }
 

@@ -117,7 +117,10 @@ export default function DashboardPage() {
 
         {/* ── RECENT CALLS ── */}
         <div>
-          <h2 style={{ fontWeight: 900, fontSize: 18, letterSpacing: '-.5px', marginBottom: 16 }}>Recent Calls</h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+            <h2 style={{ fontWeight: 900, fontSize: 18, letterSpacing: '-.5px', margin: 0 }}>Recent Calls</h2>
+            <a href="/calls" style={{ fontSize: 13, color: '#f97316', fontWeight: 600, textDecoration: 'none' }}>View all →</a>
+          </div>
           <div style={{ background: '#101010', border: '1px solid rgba(255,255,255,.06)', borderRadius: 14, overflow: 'hidden' }}>
             {calls?.calls?.length === 0 ? (
               <div style={{ padding: '32px', textAlign: 'center', color: '#444', fontSize: 13 }}>No calls yet</div>

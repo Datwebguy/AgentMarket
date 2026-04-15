@@ -12,6 +12,7 @@ const CHAIN_ID = parseInt(process.env.NEXT_PUBLIC_X_LAYER_CHAIN_ID || '196');
 
 const NAV_LINKS = [
   { label: 'Marketplace', href: '/marketplace' },
+  { label: 'Calls',       href: '/calls'       },
   { label: 'Pricing',     href: '/pricing'     },
   { label: 'Docs',        href: '/docs'         },
   { label: 'Deploy',      href: '/deploy'       },
@@ -129,6 +130,8 @@ export function Navbar() {
                     style={{ background: '#111', border: '1px solid rgba(255,255,255,.12)', boxShadow: '0 8px 32px rgba(0,0,0,.6)' }}>
                     <a href="/dashboard" onClick={() => setMenuOpen(false)}
                       className="flex px-3 py-2 rounded-lg text-[13px] font-medium text-[#ccc] no-underline hover:bg-white/[0.04]">Dashboard</a>
+                    <a href="/calls" onClick={() => setMenuOpen(false)}
+                      className="flex px-3 py-2 rounded-lg text-[13px] font-medium text-[#ccc] no-underline hover:bg-white/[0.04]">My Calls</a>
                     <a href="/deploy" onClick={() => setMenuOpen(false)}
                       className="flex px-3 py-2 rounded-lg text-[13px] font-medium text-[#ccc] no-underline hover:bg-white/[0.04]">Deploy Agent</a>
                     <div className="h-px my-1 bg-white/[0.06]" />
@@ -196,6 +199,11 @@ export function Navbar() {
                   className="py-3 text-center rounded-xl text-[14px] font-semibold text-[#ccc] no-underline"
                   style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.08)' }}>
                   Dashboard
+                </a>
+                <a href="/calls" onClick={() => setMobileOpen(false)}
+                  className="py-3 text-center rounded-xl text-[14px] font-semibold text-[#ccc] no-underline"
+                  style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.08)' }}>
+                  My Calls
                 </a>
                 <a href="/deploy" onClick={() => setMobileOpen(false)}
                   className="py-3 text-center rounded-xl text-[15px] font-bold text-white no-underline"
