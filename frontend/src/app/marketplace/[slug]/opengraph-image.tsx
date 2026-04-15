@@ -1,10 +1,9 @@
 import { ImageResponse } from 'next/og';
 
-export const runtime = 'edge';
 export const contentType = 'image/png';
 export const size = { width: 1200, height: 630 };
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'https://api.agentmarket.xyz/v1';
+const API = 'https://agentmarket-production-e911.up.railway.app/api/v1';
 
 export default async function AgentOGImage({ params }: { params: { slug: string } }) {
   let agent: any = null;

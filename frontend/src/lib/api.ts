@@ -6,8 +6,16 @@
 
 import axios, { AxiosInstance } from 'axios';
 
-// NEXT_PUBLIC_* vars can fail to embed in Vercel builds; hardcode as the definitive fallback
-const BASE_URL = 'https://agentmarket-production-e911.up.railway.app/api/v1';
+// BASE_URL is hardcoded so it survives Vercel's NEXT_PUBLIC_ build-time embedding quirks.
+// To change the backend URL, update this constant and redeploy.
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  'https://agentmarket-production-e911.up.railway.app/api/v1';
+
+if (typeof window !== 'undefined') {
+  // Visible in browser DevTools console — helps verify which backend is being hit
+  console.info('[AgentMarket] API base URL:', BASE_URL);
+}
 
 // ─── TYPES ───────────────────────────────────────────────────────────────────
 

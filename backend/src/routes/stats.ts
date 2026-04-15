@@ -38,7 +38,8 @@ statsRouter.get('/platform', async (_req: Request, res: Response) => {
       avgResponseMs:     Math.round(avgResult._avg.responseMs || 0),
     });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch platform stats' });
+    console.error('PLATFORM STATS ERROR:', err);
+    res.status(500).json({ error: 'Failed to fetch platform stats', detail: (err as Error).message });
   }
 });
 

@@ -90,7 +90,8 @@ agentsRouter.get('/', optionalAuthenticate, async (req: Request, res: Response) 
       },
     });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch agents' });
+    console.error('LIST AGENTS ERROR:', err);
+    res.status(500).json({ error: 'Failed to fetch agents', detail: (err as Error).message });
   }
 });
 

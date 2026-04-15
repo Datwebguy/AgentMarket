@@ -165,16 +165,15 @@ export default function MarketplacePage() {
           {error && !isLoading && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 24px', textAlign: 'center', gap: 12 }}>
               <div style={{ fontSize: 44, marginBottom: 4 }}>⚡</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-.5px' }}>API not connected</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-.5px' }}>Backend error</div>
               <div style={{ fontSize: 14, color: '#666', maxWidth: 480, lineHeight: 1.8, fontWeight: 400 }}>
-                Your frontend cannot reach the backend. Go to your Vercel dashboard, open Environment Variables, and make sure{' '}
-                <code style={{ background: 'rgba(255,255,255,.08)', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace', fontSize: 12, color: '#f97316' }}>
-                  NEXT_PUBLIC_API_URL
-                </code>{' '}
-                is set to your live Railway backend URL ending in{' '}
-                <code style={{ background: 'rgba(255,255,255,.08)', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace', fontSize: 12, color: '#00d4a0' }}>/api/v1</code>.
-                Then redeploy.
+                The API returned an error. Check the Railway service logs for a database connection issue.
               </div>
+              {(error as any)?.response?.data?.detail && (
+                <code style={{ fontSize: 12, color: '#ef4444', background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.15)', borderRadius: 8, padding: '8px 14px', maxWidth: 560, textAlign: 'left', wordBreak: 'break-all' }}>
+                  {(error as any).response.data.detail}
+                </code>
+              )}
               <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
                 <button
                   onClick={() => refetch()}
