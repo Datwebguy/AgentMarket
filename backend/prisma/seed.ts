@@ -143,34 +143,29 @@ async function run(input) {
   const ip = (input.ip || input.address || '').trim();
   if (!ip) return { error: 'Provide an IP address', example: { ip: '8.8.8.8' } };
 
-  const fields = 'status,message,country,countryCode,regionName,city,zip,lat,lon,timezone,isp,org,as,query,mobile,proxy,hosting';
-  const resp = await fetch('https://ip-api.com/json/' + ip + '?fields=' + fields);
+  const resp = await fetch('https://ipwho.is/' + ip);
   if (!resp.ok) throw new Error('IP lookup error: ' + resp.status);
   const d = await resp.json();
 
-  if (d.status === 'fail') {
+  if (!d.success) {
     return { error: d.message || 'IP lookup failed', ip, hint: 'Provide a valid public IPv4 or IPv6 address' };
   }
 
   return {
-    ip:          d.query,
+    ip:          d.ip,
+    type:        d.type,
     country:     d.country,
-    countryCode: d.countryCode,
-    region:      d.regionName,
+    countryCode: d.country_code,
+    region:      d.region,
     city:        d.city,
-    zip:         d.zip || null,
-    timezone:    d.timezone,
-    coordinates: { lat: d.lat, lon: d.lon },
-    isp:         d.isp,
-    org:         d.org,
-    asn:         d.as,
-    flags: {
-      mobile:  d.mobile  || false,
-      proxy:   d.proxy   || false,
-      hosting: d.hosting || false,
-    },
-    summary:   d.city + ', ' + d.country + ' · ' + d.isp + (d.proxy ? ' [PROXY]' : '') + (d.hosting ? ' [HOSTING]' : ''),
-    source:   'ip-api.com', timestamp: new Date().toISOString(),
+    postal:      d.postal,
+    timezone:    d.timezone ? d.timezone.id : null,
+    coordinates: { lat: d.latitude, lon: d.longitude },
+    isp:         d.connection ? d.connection.isp  : null,
+    org:         d.connection ? d.connection.org  : null,
+    asn:         d.connection ? d.connection.asn  : null,
+    summary:     d.city + ', ' + d.country + ' (' + d.country_code + ') · ' + (d.connection ? d.connection.isp : 'Unknown ISP'),
+    source:     'ipwho.is', timestamp: new Date().toISOString(),
   };
 }
 `.trim();
@@ -182,18 +177,20 @@ async function run(input) {
   if (!address) return { error: 'Provide an Ethereum address', example: { address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' } };
   if (!/^0x[0-9a-fA-F]{40}$/.test(address)) return { error: 'Invalid Ethereum address — must be 0x followed by 40 hex characters' };
 
-  const RPC = 'https://eth.llamarpc.com';
+  const RPCS = ['https://cloudflare-eth.com', 'https://rpc.ankr.com/eth', 'https://ethereum.publicnode.com'];
 
   async function rpc(method, params) {
-    const resp = await fetch(RPC, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ jsonrpc: '2.0', method: method, params: params, id: 1 }),
-    });
-    if (!resp.ok) throw new Error('Ethereum RPC error: ' + resp.status);
-    const json = await resp.json();
-    if (json.error) throw new Error('RPC: ' + json.error.message);
-    return json.result;
+    var lastErr;
+    for (var i = 0; i < RPCS.length; i++) {
+      try {
+        var r = await fetch(RPCS[i], { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', method: method, params: params, id: 1 }) });
+        if (!r.ok) { lastErr = new Error('RPC HTTP ' + r.status); continue; }
+        var j = await r.json();
+        if (j.error) { lastErr = new Error(j.error.message); continue; }
+        return j.result;
+      } catch(e) { lastErr = e; }
+    }
+    throw lastErr || new Error('All RPC endpoints failed');
   }
 
   const balanceHex = await rpc('eth_getBalance', [address, 'latest']);
@@ -218,7 +215,7 @@ async function run(input) {
       hasBalance: balanceEth > 0,
     },
     summary: address.slice(0,6) + '...' + address.slice(-4) + ' | ' + balanceEth.toFixed(4) + ' ETH | ' + txCount + ' txs | ' + (isContract ? 'Contract' : 'Wallet'),
-    network: 'Ethereum Mainnet', source: 'LlamaRPC', timestamp: new Date().toISOString(),
+    network: 'Ethereum Mainnet', source: 'Cloudflare/Ankr RPC', timestamp: new Date().toISOString(),
   };
 }
 `.trim();
