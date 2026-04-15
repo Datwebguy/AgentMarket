@@ -115,7 +115,7 @@ export default function SignInPage() {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <a href="/" style={{ fontWeight: 900, fontSize: 22, letterSpacing: '-.5px', textDecoration: 'none', color: '#fff' }}>
-            Agent<span style={{ color: '#7c5cfc' }}>Market</span><span style={{ color: '#00d4a0' }}>.</span>
+            Agent<span style={{ color: '#f97316' }}>Market</span><span style={{ color: '#00d4a0' }}>.</span>
           </a>
           <p style={{ fontSize: 14, color: '#555', marginTop: 6 }}>The AI agent marketplace</p>
         </div>
@@ -133,7 +133,7 @@ export default function SignInPage() {
             <button
               onClick={siweSignIn}
               style={{
-                width: '100%', background: '#7c5cfc', color: '#fff', border: 'none',
+                width: '100%', background: '#f97316', color: '#fff', border: 'none',
                 borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit', marginBottom: 16,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
@@ -148,7 +148,7 @@ export default function SignInPage() {
           {['connecting', 'signing', 'verifying'].includes(step) && (
             <div style={{ background: '#080808', borderRadius: 12, padding: '18px 20px', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid #7c5cfc', borderTop: '2px solid transparent', animation: 'spin 1s linear infinite' }}></div>
+                <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid #f97316', borderTop: '2px solid transparent', animation: 'spin 1s linear infinite' }}></div>
                 <span style={{ fontSize: 14, color: '#ccc', fontWeight: 500 }}>{stepLabels[step]}</span>
               </div>
             </div>

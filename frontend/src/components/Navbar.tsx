@@ -10,7 +10,7 @@ import { useAuthStore } from '../hooks/useAuthStore';
 const CHAIN_ID = parseInt(process.env.NEXT_PUBLIC_X_LAYER_CHAIN_ID || '196');
 
 export function Navbar() {
-  const { address, isConnected, chain } = useAccount();
+  const { address, isConnected } = useAccount();
   const { connectAsync }  = useConnect();
   const { disconnect }    = useDisconnect();
   const { signMessageAsync } = useSignMessage();
@@ -65,8 +65,6 @@ export function Navbar() {
     setMenuOpen(false);
   }
 
-  const wrongChain = isConnected && chain?.id !== CHAIN_ID;
-
   return (
     <nav style={{
       position:   'sticky', top: 0, zIndex: 100,
@@ -79,7 +77,7 @@ export function Navbar() {
 
         {/* Logo */}
         <a href="/" style={{ fontWeight: 900, fontSize: 17, letterSpacing: '-.4px', textDecoration: 'none', color: '#fff', whiteSpace: 'nowrap' }}>
-          Agent<span style={{ color: '#7c5cfc' }}>Market</span><span style={{ color: '#00d4a0' }}>.</span>
+          Agent<span style={{ color: '#f97316' }}>Market</span><span style={{ color: '#00d4a0' }}>.</span>
         </a>
 
         {/* Links */}
@@ -103,13 +101,6 @@ export function Navbar() {
           ))}
         </div>
 
-        {/* Wrong chain warning */}
-        {wrongChain && (
-          <div style={{ fontSize: 12, color: '#f59e0b', background: 'rgba(245,158,11,.1)', border: '1px solid rgba(245,158,11,.2)', borderRadius: 6, padding: '4px 10px' }}>
-            Switch to X Layer (196)
-          </div>
-        )}
-
         {/* Right side */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {!isConnected ? (
@@ -117,7 +108,7 @@ export function Navbar() {
               onClick={handleConnect}
               disabled={signing}
               style={{
-                background: '#7c5cfc', color: '#fff', border: 'none',
+                background: '#f97316', color: '#fff', border: 'none',
                 borderRadius: 999, padding: '8px 18px',
                 fontSize: 13, fontWeight: 700, cursor: signing ? 'not-allowed' : 'pointer',
                 opacity: signing ? .6 : 1, fontFamily: 'inherit',

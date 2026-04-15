@@ -73,8 +73,8 @@ export default function AdminPage() {
         {(['overview','agents','calls','leaderboard'] as AdminTab[]).map(t => (
           <button key={t} onClick={() => setTab(t)} style={{
             padding: '12px 16px', fontSize: 13, fontWeight: tab === t ? 700 : 500,
-            color: tab === t ? '#7c5cfc' : '#666', background: 'none', border: 'none',
-            borderBottom: tab === t ? '2px solid #7c5cfc' : '2px solid transparent',
+            color: tab === t ? '#f97316' : '#666', background: 'none', border: 'none',
+            borderBottom: tab === t ? '2px solid #f97316' : '2px solid transparent',
             cursor: 'pointer', fontFamily: 'inherit', textTransform: 'capitalize',
             marginBottom: -1,
           }}>
@@ -90,7 +90,7 @@ export default function AdminPage() {
           <>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 32 }}>
               {[
-                { label: 'Total Agents',    value: stats?.totalAgents ?? '—',                         color: '#7c5cfc' },
+                { label: 'Total Agents',    value: stats?.totalAgents ?? '—',                         color: '#f97316' },
                 { label: 'Total Calls',     value: stats?.totalCalls?.toLocaleString() ?? '—',         color: '#00d4a0' },
                 { label: 'Volume (USDC)',   value: stats ? `$${parseFloat(stats.totalVolumeUsdc).toFixed(2)}` : '—', color: '#fff' },
                 { label: 'Unique Callers',  value: stats?.uniqueCallers?.toLocaleString() ?? '—',      color: '#fff' },
@@ -161,7 +161,7 @@ export default function AdminPage() {
                     </span>
                   </span>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <button onClick={() => {}} style={{ fontSize: 11, padding: '4px 8px', borderRadius: 6, background: 'rgba(124,92,252,.15)', border: '1px solid rgba(124,92,252,.25)', color: '#7c5cfc', cursor: 'pointer', fontFamily: 'inherit' }}>
+                    <button onClick={() => {}} style={{ fontSize: 11, padding: '4px 8px', borderRadius: 6, background: 'rgba(249,115,22,.15)', border: '1px solid rgba(249,115,22,.25)', color: '#f97316', cursor: 'pointer', fontFamily: 'inherit' }}>
                       Verify
                     </button>
                   </div>
@@ -181,7 +181,7 @@ export default function AdminPage() {
               </div>
               {callsData?.calls.map(call => (
                 <div key={call.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 80px', padding: '11px 16px', borderBottom: '1px solid rgba(255,255,255,.03)', alignItems: 'center', fontSize: 12 }}>
-                  <span style={{ fontFamily: 'monospace', color: '#7c5cfc' }}>{call.id.slice(0, 16)}...</span>
+                  <span style={{ fontFamily: 'monospace', color: '#f97316' }}>{call.id.slice(0, 16)}...</span>
                   <span style={{ color: '#ccc', fontWeight: 600 }}>{call.agent?.name || '—'}</span>
                   <span style={{ fontFamily: 'monospace', color: '#666' }}>{call.callerWallet?.slice(0,10)}...</span>
                   <span style={{ color: '#00d4a0', fontWeight: 600 }}>{parseFloat(call.amountUsdc?.toString() || '0').toFixed(4)} USDC</span>
@@ -201,7 +201,7 @@ export default function AdminPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
               {lbData?.leaderboard.map((agent, i) => (
                 <div key={agent.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 18px', background: '#0a0a0a', border: '1px solid rgba(255,255,255,.06)', borderRadius: 10 }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: i < 3 ? '#7c5cfc' : 'rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, flexShrink: 0, color: i < 3 ? '#fff' : '#555' }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: i < 3 ? '#f97316' : 'rgba(255,255,255,.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, flexShrink: 0, color: i < 3 ? '#fff' : '#555' }}>
                     {i + 1}
                   </div>
                   <div style={{ flex: 1 }}>
@@ -209,7 +209,7 @@ export default function AdminPage() {
                     <div style={{ fontSize: 11, color: '#555', fontFamily: 'monospace' }}>{agent.category}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 700, fontSize: 15, color: '#7c5cfc' }}>{parseInt(agent.totalCalls?.toString() || '0').toLocaleString()}</div>
+                    <div style={{ fontWeight: 700, fontSize: 15, color: '#f97316' }}>{parseInt(agent.totalCalls?.toString() || '0').toLocaleString()}</div>
                     <div style={{ fontSize: 10, color: '#444' }}>calls</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>

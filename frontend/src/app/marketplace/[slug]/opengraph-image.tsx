@@ -22,9 +22,9 @@ export default async function AgentOGImage({ params }: { params: { slug: string 
 
   const catColors: Record<string, string> = {
     DEFI: '#00d4a0', RISK: '#ef4444', TRADING: '#60a5fa',
-    INTELLIGENCE: '#7c5cfc', PAYMENTS: '#f59e0b', INFRASTRUCTURE: '#888',
+    INTELLIGENCE: '#f97316', PAYMENTS: '#f59e0b', INFRASTRUCTURE: '#888',
   };
-  const catColor = catColors[category] || '#7c5cfc';
+  const catColor = catColors[category] || '#f97316';
 
   return new ImageResponse(
     (
@@ -47,10 +47,10 @@ export default async function AgentOGImage({ params }: { params: { slug: string 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 48 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <span style={{ fontSize: 22, fontWeight: 900, color: '#fff' }}>Agent</span>
-            <span style={{ fontSize: 22, fontWeight: 900, color: '#7c5cfc' }}>Market</span>
+            <span style={{ fontSize: 22, fontWeight: 900, color: '#f97316' }}>Market</span>
             <span style={{ fontSize: 22, fontWeight: 900, color: '#00d4a0' }}>.</span>
           </div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: catColor, background: 'rgba(124,92,252,0.12)', padding: '6px 16px', borderRadius: 999, display: 'flex' }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: catColor, background: 'rgba(249,115,22,0.12)', padding: '6px 16px', borderRadius: 999, display: 'flex' }}>
             {category}
           </div>
         </div>
@@ -72,7 +72,7 @@ export default async function AgentOGImage({ params }: { params: { slug: string 
             <span style={{ fontSize: 14, color: '#555', display: 'flex' }}>per call</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 32, fontWeight: 900, color: '#7c5cfc', letterSpacing: '-1px', display: 'flex' }}>{calls}</span>
+            <span style={{ fontSize: 32, fontWeight: 900, color: '#f97316', letterSpacing: '-1px', display: 'flex' }}>{calls}</span>
             <span style={{ fontSize: 14, color: '#555', display: 'flex' }}>total calls</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

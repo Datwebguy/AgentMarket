@@ -10,7 +10,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; color: string }> = {
   DEFI:           { bg: 'rgba(0,212,160,.1)',  color: '#00d4a0' },
   RISK:           { bg: 'rgba(239,68,68,.1)',  color: '#ef4444' },
   TRADING:        { bg: 'rgba(96,165,250,.1)', color: '#60a5fa' },
-  INTELLIGENCE:   { bg: 'rgba(124,92,252,.12)',color: '#7c5cfc' },
+  INTELLIGENCE:   { bg: 'rgba(249,115,22,.12)',color: '#f97316' },
   PAYMENTS:       { bg: 'rgba(245,158,11,.1)', color: '#f59e0b' },
   INFRASTRUCTURE: { bg: 'rgba(255,255,255,.06)',color: '#888'   },
 };
@@ -42,7 +42,7 @@ export default function AgentDetailPage({ params }: { params: { slug: string } }
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 32, marginBottom: 12 }}>404</div>
           <div style={{ color: '#666', fontSize: 14 }}>Agent not found</div>
-          <a href="/marketplace" style={{ color: '#7c5cfc', fontSize: 13, display: 'block', marginTop: 12 }}>← Back to Marketplace</a>
+          <a href="/marketplace" style={{ color: '#f97316', fontSize: 13, display: 'block', marginTop: 12 }}>← Back to Marketplace</a>
         </div>
       </main>
     </>
@@ -150,7 +150,7 @@ async function callAgent(wallet, inputPayload) {
               <button
                 onClick={() => setShowCall(true)}
                 style={{
-                  width: '100%', background: '#7c5cfc', color: '#fff', border: 'none',
+                  width: '100%', background: '#f97316', color: '#fff', border: 'none',
                   borderRadius: 10, padding: 13, fontSize: 14, fontWeight: 700,
                   cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10,
                 }}
@@ -164,7 +164,7 @@ async function callAgent(wallet, inputPayload) {
           {/* Stats grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 40 }}>
             {[
-              { label: 'Total Calls',      value: parseInt(agent.totalCalls.toString()).toLocaleString(), color: '#7c5cfc' },
+              { label: 'Total Calls',      value: parseInt(agent.totalCalls.toString()).toLocaleString(), color: '#f97316' },
               { label: 'Total Earned',     value: `$${revenue}`, color: '#00d4a0' },
               { label: 'Avg Response',     value: agent.avgResponseMs ? `${agent.avgResponseMs}ms` : '—', color: '#fff' },
               { label: 'Uptime',           value: `${parseFloat(agent.uptimePct.toString()).toFixed(1)}%`, color: '#fff' },
@@ -211,7 +211,7 @@ async function callAgent(wallet, inputPayload) {
                 <a
                   href={`${process.env.NEXT_PUBLIC_X_LAYER_EXPLORER}/address/${agent.walletAddress}`}
                   target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: 11, color: '#7c5cfc', display: 'block', marginTop: 6 }}
+                  style={{ fontSize: 11, color: '#f97316', display: 'block', marginTop: 6 }}
                 >
                   View on OKLink ↗
                 </a>

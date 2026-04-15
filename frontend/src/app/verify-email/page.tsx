@@ -24,12 +24,12 @@ function VerifyEmailContent() {
     <main style={{ minHeight: '100vh', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Figtree', sans-serif", padding: 24 }}>
       <div style={{ textAlign: 'center', maxWidth: 400 }}>
         <div style={{ fontWeight: 900, fontSize: 22, letterSpacing: '-.5px', marginBottom: 40, color: '#fff' }}>
-          Agent<span style={{ color: '#7c5cfc' }}>Market</span><span style={{ color: '#00d4a0' }}>.</span>
+          Agent<span style={{ color: '#f97316' }}>Market</span><span style={{ color: '#00d4a0' }}>.</span>
         </div>
 
         {status === 'verifying' && (
           <>
-            <div style={{ width: 48, height: 48, border: '3px solid rgba(124,92,252,.2)', borderTop: '3px solid #7c5cfc', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 20px' }}></div>
+            <div style={{ width: 48, height: 48, border: '3px solid rgba(249,115,22,.2)', borderTop: '3px solid #f97316', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 20px' }}></div>
             <h2 style={{ fontWeight: 900, fontSize: 22, color: '#fff', marginBottom: 8 }}>Verifying your email...</h2>
             <p style={{ color: '#666', fontSize: 14 }}>Just a moment.</p>
           </>
@@ -48,7 +48,7 @@ function VerifyEmailContent() {
             <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(239,68,68,.1)', border: '2px solid rgba(239,68,68,.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', fontSize: 24 }}>✕</div>
             <h2 style={{ fontWeight: 900, fontSize: 22, color: '#ef4444', marginBottom: 8 }}>Verification failed</h2>
             <p style={{ color: '#888', fontSize: 14, marginBottom: 24, lineHeight: 1.6 }}>{msg}</p>
-            <a href="/signin" style={{ display: 'inline-block', background: '#7c5cfc', color: '#fff', borderRadius: 999, padding: '10px 24px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+            <a href="/signin" style={{ display: 'inline-block', background: '#f97316', color: '#fff', borderRadius: 999, padding: '10px 24px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
               Back to Sign In
             </a>
           </>
@@ -63,7 +63,7 @@ export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
       <main style={{ minHeight: '100vh', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: 48, height: 48, border: '3px solid rgba(124,92,252,.2)', borderTop: '3px solid #7c5cfc', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <div style={{ width: 48, height: 48, border: '3px solid rgba(249,115,22,.2)', borderTop: '3px solid #f97316', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </main>
     }>

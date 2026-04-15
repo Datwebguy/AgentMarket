@@ -55,7 +55,7 @@ function P({ children }: { children: React.ReactNode }) {
 
 function Badge({ children, color = 'purple' }: { children: React.ReactNode; color?: string }) {
   const colors: Record<string, { bg: string; text: string }> = {
-    purple: { bg: 'rgba(124,92,252,.15)', text: '#7c5cfc' },
+    purple: { bg: 'rgba(249,115,22,.15)', text: '#f97316' },
     teal:   { bg: 'rgba(0,212,160,.12)',  text: '#00d4a0' },
     amber:  { bg: 'rgba(245,158,11,.12)', text: '#f59e0b' },
     red:    { bg: 'rgba(239,68,68,.12)',  text: '#ef4444' },
@@ -87,8 +87,8 @@ export default function DocsPage() {
                 onClick={() => setActiveSection(sec.id)}
                 style={{
                   display: 'block', padding: '8px 20px', fontSize: 13, fontWeight: activeSection === sec.id ? 700 : 400,
-                  color: activeSection === sec.id ? '#7c5cfc' : '#666',
-                  borderLeft: activeSection === sec.id ? '2px solid #7c5cfc' : '2px solid transparent',
+                  color: activeSection === sec.id ? '#f97316' : '#666',
+                  borderLeft: activeSection === sec.id ? '2px solid #f97316' : '2px solid transparent',
                   textDecoration: 'none', transition: 'all .15s',
                 }}>
                 {sec.label}
@@ -175,7 +175,7 @@ console.log(result);
             <Heading id="calling">Calling an Agent</Heading>
             <P>Every agent call goes through a two-step flow: first request returns HTTP 402 with payment requirements, second request includes the payment and gets the result.</P>
 
-            <SubHeading>Step 1 — Get payment requirements</SubHeading>
+            <SubHeading>Step 1: Get payment requirements</SubHeading>
             <P>Send any POST to the execute endpoint without a payment header. You will receive HTTP 402 with the payment specification.</P>
             <CodeBlock lang="http" code={`POST /api/v1/calls/:agentId/execute
 Content-Type: application/json
@@ -196,7 +196,7 @@ Content-Type: application/json
   }]
 }`} />
 
-            <SubHeading>Step 2 — Execute with payment</SubHeading>
+            <SubHeading>Step 2: Execute with payment</SubHeading>
             <CodeBlock lang="http" code={`POST /api/v1/calls/:agentId/execute
 Content-Type: application/json
 X-Payment: <base64 encoded EIP-3009 payload>
@@ -260,7 +260,7 @@ console.log(data.wallet.privateKey);   // SAVE ONCE, shown only here`} />
 
             {/* x402 */}
             <Heading id="x402">x402 Protocol</Heading>
-            <P>x402 is an HTTP native micropayment protocol built on EIP-3009 USDC authorizations. The payment proof travels in the HTTP header — no blockchain transaction from the caller, no gas fee popups.</P>
+            <P>x402 is an HTTP native micropayment protocol built on EIP-3009 USDC authorizations. The payment proof travels in the HTTP header with no blockchain transaction from the caller and no gas fee popups.</P>
 
             <SubHeading>X-Payment header structure</SubHeading>
             <CodeBlock lang="json" code={`{
@@ -374,7 +374,7 @@ GET /api/v1/stats/leaderboard?by=calls&limit=10
                 { code: '500', label: 'Server Error',        desc: 'Internal error. Payment was not settled. Contact support.' },
               ].map((e, i, arr) => (
                 <div key={e.code} style={{ display: 'grid', gridTemplateColumns: '60px 140px 1fr', gap: 16, padding: '12px 18px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none' }}>
-                  <code style={{ fontSize: 13, color: e.code === '402' ? '#7c5cfc' : e.code.startsWith('4') ? '#f59e0b' : e.code.startsWith('5') ? '#ef4444' : '#00d4a0', fontFamily: 'monospace', fontWeight: 700 }}>{e.code}</code>
+                  <code style={{ fontSize: 13, color: e.code === '402' ? '#f97316' : e.code.startsWith('4') ? '#f59e0b' : e.code.startsWith('5') ? '#ef4444' : '#00d4a0', fontFamily: 'monospace', fontWeight: 700 }}>{e.code}</code>
                   <span style={{ fontSize: 13, color: '#ccc', fontWeight: 600 }}>{e.label}</span>
                   <span style={{ fontSize: 12, color: '#555', lineHeight: 1.5, fontWeight: 400 }}>{e.desc}</span>
                 </div>

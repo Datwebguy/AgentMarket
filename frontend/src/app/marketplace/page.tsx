@@ -70,7 +70,7 @@ export default function MarketplacePage() {
                 : 'Discover and call AI agents on XLayer'}
             </p>
           </div>
-          <a href="/deploy" style={{ background: '#7c5cfc', color: '#fff', borderRadius: 999, padding: '10px 22px', fontSize: 13, fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+          <a href="/deploy" style={{ background: '#f97316', color: '#fff', borderRadius: 999, padding: '10px 22px', fontSize: 13, fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
             + Deploy Agent
           </a>
         </div>
@@ -80,7 +80,7 @@ export default function MarketplacePage() {
           <div style={{ maxWidth: 1200, margin: '24px auto 0', padding: '0 32px' }}>
             <div style={{ display: 'flex', border: '1px solid rgba(255,255,255,.06)', borderRadius: 14, background: '#101010', overflow: 'hidden' }}>
               {[
-                { label: 'Agents Live',    value: stats.totalAgents,                                         color: '#7c5cfc' },
+                { label: 'Agents Live',    value: stats.totalAgents,                                         color: '#f97316' },
                 { label: 'Calls Today',    value: stats.totalCalls?.toLocaleString(),                        color: '#00d4a0' },
                 { label: 'Volume Settled', value: `$${parseFloat(stats.totalVolumeUsdc || '0').toFixed(2)}`, color: '#fff'    },
                 { label: 'Avg Response',   value: `${stats.avgResponseMs || 0}ms`,                           color: '#fff'    },
@@ -120,9 +120,9 @@ export default function MarketplacePage() {
                   onClick={() => setCategory(cat.key)}
                   style={{
                     fontSize: 12, padding: '6px 14px', borderRadius: 999,
-                    border: `1px solid ${active ? 'rgba(124,92,252,.4)' : 'rgba(255,255,255,.08)'}`,
-                    background: active ? 'rgba(124,92,252,.18)' : 'rgba(255,255,255,.04)',
-                    color: active ? '#7c5cfc' : '#777',
+                    border: `1px solid ${active ? 'rgba(249,115,22,.4)' : 'rgba(255,255,255,.08)'}`,
+                    background: active ? 'rgba(249,115,22,.18)' : 'rgba(255,255,255,.04)',
+                    color: active ? '#f97316' : '#777',
                     fontWeight: active ? 700 : 500,
                     cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
                     transition: 'all .15s',
@@ -168,7 +168,7 @@ export default function MarketplacePage() {
               <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-.5px' }}>API not connected</div>
               <div style={{ fontSize: 14, color: '#666', maxWidth: 480, lineHeight: 1.8, fontWeight: 400 }}>
                 Your frontend cannot reach the backend. Go to your Vercel dashboard, open Environment Variables, and make sure{' '}
-                <code style={{ background: 'rgba(255,255,255,.08)', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace', fontSize: 12, color: '#7c5cfc' }}>
+                <code style={{ background: 'rgba(255,255,255,.08)', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace', fontSize: 12, color: '#f97316' }}>
                   NEXT_PUBLIC_API_URL
                 </code>{' '}
                 is set to your live Railway backend URL ending in{' '}
@@ -178,7 +178,7 @@ export default function MarketplacePage() {
               <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
                 <button
                   onClick={() => refetch()}
-                  style={{ background: '#7c5cfc', color: '#fff', border: 'none', borderRadius: 999, padding: '10px 24px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                  style={{ background: '#f97316', color: '#fff', border: 'none', borderRadius: 999, padding: '10px 24px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
                 >
                   Try Again
                 </button>
@@ -199,7 +199,7 @@ export default function MarketplacePage() {
                   : 'Be the first builder to deploy an AI agent on AgentMarket and start earning USDC per call via x402.'}
               </div>
               {!search && !category && (
-                <a href="/deploy" style={{ marginTop: 12, background: '#7c5cfc', color: '#fff', borderRadius: 999, padding: '13px 28px', fontSize: 14, fontWeight: 700, textDecoration: 'none', display: 'inline-block', fontFamily: 'inherit' }}>
+                <a href="/deploy" style={{ marginTop: 12, background: '#f97316', color: '#fff', borderRadius: 999, padding: '13px 28px', fontSize: 14, fontWeight: 700, textDecoration: 'none', display: 'inline-block', fontFamily: 'inherit' }}>
                   Deploy the First Agent
                 </a>
               )}
@@ -249,7 +249,7 @@ export default function MarketplacePage() {
                           {idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ color: '#333', padding: '0 2px' }}>...</span>}
                           <button
                             onClick={() => setPage(p)}
-                            style={{ width: 34, height: 34, borderRadius: '50%', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', background: p === page ? '#7c5cfc' : 'transparent', color: p === page ? '#fff' : '#666', transition: 'all .15s' }}
+                            style={{ width: 34, height: 34, borderRadius: '50%', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', background: p === page ? '#f97316' : 'transparent', color: p === page ? '#fff' : '#666', transition: 'all .15s' }}
                           >
                             {p}
                           </button>

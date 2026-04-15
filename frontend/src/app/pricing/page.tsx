@@ -97,7 +97,7 @@ const FAQS = [
   },
   {
     q: 'What is x402 and how does payment work?',
-    a: 'x402 is an HTTP native payment protocol. Callers sign an EIP-3009 USDC authorization with their wallet — no separate transaction, no gas popup. The payment settles onchain on XLayer in approximately 2 seconds.',
+    a: 'x402 is an HTTP native payment protocol. Callers sign an EIP-3009 USDC authorization with their wallet. No separate transaction, no gas popup. The payment settles onchain on XLayer in approximately 2 seconds.',
   },
   {
     q: 'Can I upgrade or downgrade my plan at any time?',
@@ -136,7 +136,7 @@ export default function PricingPage() {
             Pricing
           </div>
           <h1 style={{ fontWeight: 900, fontSize: 'clamp(40px,6vw,72px)', letterSpacing: '-2px', lineHeight: .95, marginBottom: 18 }}>
-            Simple, honest pricing.<br/><span style={{ color: '#7c5cfc' }}>Pay as you grow.</span>
+            Simple, honest pricing.<br/><span style={{ color: '#f97316' }}>Pay as you grow.</span>
           </h1>
           <p style={{ fontSize: 17, color: '#888', maxWidth: 500, margin: '0 auto 36px', lineHeight: 1.7, fontWeight: 400 }}>
             Start free. Upgrade when you need to scale. Every plan includes real x402 payments, XLayer deployment, and the full OKX Onchain OS skill set.
@@ -147,7 +147,7 @@ export default function PricingPage() {
             <span style={{ color: !billingAnnual ? '#fff' : '#555' }}>Monthly</span>
             <button onClick={() => setBillingAnnual(b => !b)} style={{
               width: 40, height: 22, borderRadius: 999, border: 'none', cursor: 'pointer',
-              background: billingAnnual ? '#7c5cfc' : 'rgba(255,255,255,.12)',
+              background: billingAnnual ? '#f97316' : 'rgba(255,255,255,.12)',
               position: 'relative', transition: 'background .2s',
             }}>
               <span style={{
@@ -166,19 +166,19 @@ export default function PricingPage() {
           <div style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
             {PLANS.map(plan => (
               <div key={plan.name} style={{
-                background: plan.highlight ? 'linear-gradient(160deg,rgba(124,92,252,.08),rgba(0,212,160,.04))' : '#101010',
-                border: plan.highlight ? '1px solid rgba(124,92,252,.4)' : '1px solid rgba(255,255,255,.08)',
+                background: plan.highlight ? 'linear-gradient(160deg,rgba(249,115,22,.08),rgba(0,212,160,.04))' : '#101010',
+                border: plan.highlight ? '1px solid rgba(249,115,22,.4)' : '1px solid rgba(255,255,255,.08)',
                 borderRadius: 20, padding: '32px 28px',
                 position: 'relative', display: 'flex', flexDirection: 'column',
               }}>
                 {plan.badge && (
-                  <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: '#7c5cfc', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 14px', borderRadius: 999, whiteSpace: 'nowrap' }}>
+                  <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: '#f97316', color: '#fff', fontSize: 11, fontWeight: 700, padding: '4px 14px', borderRadius: 999, whiteSpace: 'nowrap' }}>
                     {plan.badge}
                   </div>
                 )}
 
                 <div style={{ marginBottom: 24 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: plan.highlight ? '#7c5cfc' : '#888', letterSpacing: '.5px', textTransform: 'uppercase', marginBottom: 8 }}>{plan.name}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: plan.highlight ? '#f97316' : '#888', letterSpacing: '.5px', textTransform: 'uppercase', marginBottom: 8 }}>{plan.name}</div>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 6 }}>
                     {plan.price !== 'Custom' && <span style={{ fontSize: 14, color: '#888', marginTop: 4 }}>$</span>}
                     <span style={{ fontWeight: 900, fontSize: 48, letterSpacing: '-2px', lineHeight: 1 }}>
@@ -196,9 +196,9 @@ export default function PricingPage() {
                 <a href={plan.ctaHref} style={{
                   display: 'block', textAlign: 'center', padding: '12px',
                   borderRadius: 10, fontSize: 14, fontWeight: 700, marginBottom: 28,
-                  background: plan.highlight ? '#7c5cfc' : 'transparent',
+                  background: plan.highlight ? '#f97316' : 'transparent',
                   color: plan.highlight ? '#fff' : '#fff',
-                  border: plan.highlight ? '1px solid #7c5cfc' : '1px solid rgba(255,255,255,.15)',
+                  border: plan.highlight ? '1px solid #f97316' : '1px solid rgba(255,255,255,.15)',
                   transition: 'opacity .18s', textDecoration: 'none',
                 }}>
                   {plan.cta}
@@ -235,7 +235,7 @@ export default function PricingPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,.07)' }}>
                 <div style={{ fontSize: 11, color: '#555', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '1px' }}>Feature</div>
                 {['Free', 'Pro', 'Enterprise'].map(h => (
-                  <div key={h} style={{ fontSize: 12, fontWeight: 700, color: h === 'Pro' ? '#7c5cfc' : '#888', textAlign: 'center' }}>{h}</div>
+                  <div key={h} style={{ fontSize: 12, fontWeight: 700, color: h === 'Pro' ? '#f97316' : '#888', textAlign: 'center' }}>{h}</div>
                 ))}
               </div>
               {COMPARE_ROWS.map((row, i) => (
@@ -246,7 +246,7 @@ export default function PricingPage() {
                       {typeof val === 'boolean' ? (
                         val ? <span style={{ color: '#00d4a0' }}>✓</span> : <span style={{ color: '#333' }}>—</span>
                       ) : (
-                        <span style={{ color: j === 1 ? '#7c5cfc' : '#888', fontWeight: j === 1 ? 600 : 400 }}>{val}</span>
+                        <span style={{ color: j === 1 ? '#f97316' : '#888', fontWeight: j === 1 ? 600 : 400 }}>{val}</span>
                       )}
                     </div>
                   ))}
@@ -285,7 +285,7 @@ export default function PricingPage() {
         <section style={{ padding: '60px 24px', borderTop: '1px solid rgba(255,255,255,.06)', textAlign: 'center' }}>
           <h2 style={{ fontWeight: 900, fontSize: 32, letterSpacing: '-1px', marginBottom: 12 }}>Ready to deploy your first agent?</h2>
           <p style={{ fontSize: 15, color: '#888', marginBottom: 28, fontWeight: 400 }}>Start free. No credit card required.</p>
-          <a href="/signin" style={{ display: 'inline-block', background: '#7c5cfc', color: '#fff', borderRadius: 999, padding: '14px 32px', fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
+          <a href="/signin" style={{ display: 'inline-block', background: '#f97316', color: '#fff', borderRadius: 999, padding: '14px 32px', fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
             Create Free Account
           </a>
         </section>

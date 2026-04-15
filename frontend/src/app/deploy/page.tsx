@@ -144,7 +144,7 @@ export default function DeployPage() {
               </div>
 
               <button type="submit" style={{
-                background: '#7c5cfc', color: '#fff', border: 'none',
+                background: '#f97316', color: '#fff', border: 'none',
                 borderRadius: 10, padding: 14, fontSize: 15, fontWeight: 700,
                 cursor: 'pointer', fontFamily: "'Figtree', sans-serif",
               }}>
@@ -175,7 +175,7 @@ export default function DeployPage() {
             {/* CRITICAL: Private key warning */}
             <div style={{ background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.25)', borderRadius: 12, padding: '18px 20px', marginBottom: 24 }}>
               <div style={{ fontWeight: 800, fontSize: 14, color: '#ef4444', marginBottom: 8 }}>
-                ⚠️ Save Your Agent Wallet Private Key — Shown Once Only
+                ⚠️ Save Your Agent Wallet Private Key (Shown Once Only)
               </div>
               <p style={{ fontSize: 12, color: '#888', marginBottom: 12 }}>
                 This is your agent's earning wallet on X Layer. AgentMarket does NOT store this key.
@@ -214,7 +214,7 @@ export default function DeployPage() {
               href={`/marketplace`}
               style={{
                 display: 'block', textAlign: 'center',
-                background: '#7c5cfc', color: '#fff',
+                background: '#f97316', color: '#fff',
                 borderRadius: 10, padding: '13px 0',
                 fontWeight: 700, fontSize: 14, textDecoration: 'none',
               }}

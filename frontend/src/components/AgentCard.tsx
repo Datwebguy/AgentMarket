@@ -11,7 +11,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; color: string }> = {
   DEFI:           { bg: 'rgba(0,212,160,.1)',    color: '#00d4a0' },
   RISK:           { bg: 'rgba(239,68,68,.1)',     color: '#ef4444' },
   TRADING:        { bg: 'rgba(96,165,250,.1)',    color: '#60a5fa' },
-  INTELLIGENCE:   { bg: 'rgba(124,92,252,.12)',   color: '#7c5cfc' },
+  INTELLIGENCE:   { bg: 'rgba(249,115,22,.12)',   color: '#f97316' },
   PAYMENTS:       { bg: 'rgba(245,158,11,.1)',    color: '#f59e0b' },
   INFRASTRUCTURE: { bg: 'rgba(255,255,255,.06)',  color: '#888' },
 };
@@ -33,7 +33,7 @@ export function AgentCard({ agent, onCall }: Props) {
         fontFamily: "'Figtree', sans-serif",
       }}
       onMouseEnter={e => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(124,92,252,.35)';
+        (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(249,115,22,.35)';
         (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
       }}
       onMouseLeave={e => {
@@ -44,7 +44,7 @@ export function AgentCard({ agent, onCall }: Props) {
       {/* Top accent bar */}
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, height: 2,
-        background: 'linear-gradient(90deg, #7c5cfc, #00d4a0)',
+        background: 'linear-gradient(90deg, #f97316, #00d4a0)',
         opacity: 0,
         transition: 'opacity .2s',
       }} className="card-bar" />
@@ -125,7 +125,7 @@ export function AgentCard({ agent, onCall }: Props) {
         <button
           onClick={(e) => { e.stopPropagation(); onCall(); }}
           style={{
-            background: '#7c5cfc', color: '#fff', border: 'none',
+            background: '#f97316', color: '#fff', border: 'none',
             borderRadius: 999, padding: '8px 18px',
             fontSize: 12, fontWeight: 700, cursor: 'pointer',
             fontFamily: "'Figtree', sans-serif",

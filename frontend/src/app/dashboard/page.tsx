@@ -57,7 +57,7 @@ export default function DashboardPage() {
           <h1 style={{ fontWeight: 900, fontSize: 22, letterSpacing: '-1px' }}>Dashboard</h1>
           <p style={{ fontSize: 11, color: '#555', fontFamily: 'monospace', marginTop: 2 }}>{address}</p>
         </div>
-        <a href="/deploy" style={{ background: '#7c5cfc', color: '#fff', border: 'none', borderRadius: 999, padding: '9px 20px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+        <a href="/deploy" style={{ background: '#f97316', color: '#fff', border: 'none', borderRadius: 999, padding: '9px 20px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
           + Deploy Agent
         </a>
       </div>
@@ -68,7 +68,7 @@ export default function DashboardPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 40 }}>
           {[
             { label: 'Total Earnings', value: `$${totalEarnings.toFixed(4)}`, unit: 'USDC', color: '#00d4a0' },
-            { label: 'Total Calls',    value: totalCalls.toLocaleString(), unit: 'all time', color: '#7c5cfc' },
+            { label: 'Total Calls',    value: totalCalls.toLocaleString(), unit: 'all time', color: '#f97316' },
             { label: 'Agents Live',    value: user?.agents?.length || 0, unit: 'deployed', color: '#fff' },
             { label: 'Platform Calls', value: stats?.totalCalls?.toLocaleString() || '—', unit: '24h total', color: '#fff' },
           ].map(({ label, value, unit, color }) => (
@@ -88,7 +88,7 @@ export default function DashboardPage() {
           ) : user?.agents?.length === 0 ? (
             <div style={{ background: '#101010', border: '1px dashed rgba(255,255,255,.08)', borderRadius: 14, padding: '40px', textAlign: 'center' }}>
               <div style={{ color: '#444', fontSize: 14, marginBottom: 16 }}>No agents deployed yet.</div>
-              <a href="/deploy" style={{ color: '#7c5cfc', fontSize: 13, fontWeight: 600 }}>Deploy your first agent →</a>
+              <a href="/deploy" style={{ color: '#f97316', fontSize: 13, fontWeight: 600 }}>Deploy your first agent →</a>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -108,7 +108,7 @@ export default function DashboardPage() {
                       <div style={{ fontSize: 10, color: '#555' }}>CALLS</div>
                     </div>
                   </div>
-                  <a href={`/marketplace/${agent.slug}`} style={{ fontSize: 12, color: '#7c5cfc', fontWeight: 600 }}>View →</a>
+                  <a href={`/marketplace/${agent.slug}`} style={{ fontSize: 12, color: '#f97316', fontWeight: 600 }}>View →</a>
                 </div>
               ))}
             </div>
@@ -129,7 +129,7 @@ export default function DashboardPage() {
               calls?.calls?.map(call => (
                 <div key={call.id} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px 120px 100px', gap: 0, padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,.03)', fontSize: 13, alignItems: 'center' }}>
                   <span style={{ fontWeight: 600, color: '#ccc' }}>{call.agent?.name || '—'}</span>
-                  <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#7c5cfc' }}>
+                  <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#f97316' }}>
                     {call.txHash ? `${call.txHash.slice(0, 10)}...` : '—'}
                   </span>
                   <span style={{ color: '#00d4a0', fontWeight: 600 }}>{parseFloat(call.amountUsdc?.toString() || '0').toFixed(4)} USDC</span>

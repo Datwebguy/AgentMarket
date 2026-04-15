@@ -39,7 +39,7 @@ export default function OGImage() {
             width: 600,
             height: 400,
             borderRadius: '50%',
-            background: 'radial-gradient(ellipse, rgba(124,92,252,0.15) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse, rgba(249,115,22,0.15) 0%, transparent 70%)',
             filter: 'blur(60px)',
             display: 'flex',
           }}
@@ -54,7 +54,7 @@ export default function OGImage() {
           }}
         >
           <span style={{ fontSize: 32, fontWeight: 900, color: '#ffffff' }}>Agent</span>
-          <span style={{ fontSize: 32, fontWeight: 900, color: '#7c5cfc' }}>Market</span>
+          <span style={{ fontSize: 32, fontWeight: 900, color: '#f97316' }}>Market</span>
           <span style={{ fontSize: 32, fontWeight: 900, color: '#00d4a0' }}>.</span>
         </div>
 
@@ -97,7 +97,7 @@ export default function OGImage() {
         {/* Stat pills */}
         <div style={{ display: 'flex', gap: 16, zIndex: 1 }}>
           {[
-            { label: 'x402 Protocol', color: '#7c5cfc' },
+            { label: 'x402 Protocol', color: '#f97316' },
             { label: 'XLayer Mainnet', color: '#00d4a0' },
             { label: 'OKX Onchain OS', color: '#f59e0b' },
           ].map(pill => (

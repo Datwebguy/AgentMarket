@@ -106,7 +106,7 @@ export function CallModal({ agent, onClose }: Props) {
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          background: '#101010', border: '1px solid rgba(124,92,252,.35)',
+          background: '#101010', border: '1px solid rgba(249,115,22,.35)',
           borderRadius: 20, width: 460, maxWidth: '100%', padding: 28,
           position: 'relative', fontFamily: "'Figtree', sans-serif",
         }}
@@ -186,7 +186,7 @@ export function CallModal({ agent, onClose }: Props) {
               onClick={execute}
               disabled={!input.trim()}
               style={{
-                width: '100%', background: '#7c5cfc', color: '#fff', border: 'none',
+                width: '100%', background: '#f97316', color: '#fff', border: 'none',
                 borderRadius: 10, padding: 13, fontFamily: "'Figtree', sans-serif",
                 fontSize: 14, fontWeight: 700, cursor: input.trim() ? 'pointer' : 'not-allowed',
                 opacity: input.trim() ? 1 : .4, transition: 'opacity .18s',
@@ -212,10 +212,10 @@ export function CallModal({ agent, onClose }: Props) {
                   <div style={{
                     width: 24, height: 24, borderRadius: '50%',
                     background: s.done ? '#00d4a0' : s.active ? 'transparent' : 'transparent',
-                    border: s.done ? '2px solid #00d4a0' : `2px solid ${s.active ? '#7c5cfc' : 'rgba(255,255,255,.1)'}`,
+                    border: s.done ? '2px solid #00d4a0' : `2px solid ${s.active ? '#f97316' : 'rgba(255,255,255,.1)'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 12, fontWeight: 700, flexShrink: 0,
-                    color: s.done ? '#000' : s.active ? '#7c5cfc' : 'rgba(255,255,255,.2)',
+                    color: s.done ? '#000' : s.active ? '#f97316' : 'rgba(255,255,255,.2)',
                     animation: s.active && !s.done ? 'spin 1.2s linear infinite' : 'none',
                   }}>
                     {s.done ? '✓' : s.active ? '·' : i + 1}
@@ -248,7 +248,7 @@ export function CallModal({ agent, onClose }: Props) {
                     href={`${process.env.NEXT_PUBLIC_X_LAYER_EXPLORER}/tx/${txHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ display: 'block', textAlign: 'center', marginTop: 14, fontSize: 11, color: '#7c5cfc', fontFamily: 'monospace' }}
+                    style={{ display: 'block', textAlign: 'center', marginTop: 14, fontSize: 11, color: '#f97316', fontFamily: 'monospace' }}
                   >
                     View on X Layer Explorer ↗
                   </a>
