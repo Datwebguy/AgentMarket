@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api, Agent, PlatformStats } from '../../lib/api';
 import { AgentCard }  from '../../components/AgentCard';
 import { CallModal }  from '../../components/CallModal';
+import { Navbar }     from '../../components/Navbar';
 
 const CATEGORIES = ['All', 'DEFI', 'RISK', 'TRADING', 'INTELLIGENCE', 'PAYMENTS', 'INFRASTRUCTURE'];
 
@@ -36,22 +37,17 @@ export default function MarketplacePage() {
   useEffect(() => { setPage(1); }, [category, search, sort]);
 
   return (
+    <>
+    <Navbar />
     <main style={{ minHeight: '100vh', background: '#080808', color: '#fff', fontFamily: "'Figtree', sans-serif" }}>
 
-      {/* ── HEADER ── */}
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,.06)', padding: '24px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-        <div>
-          <h1 style={{ fontWeight: 900, fontSize: 28, letterSpacing: '-1px' }}>
-            Agent<span style={{ color: '#7c5cfc' }}>Market</span><span style={{ color: '#00d4a0' }}>.</span>
-          </h1>
-          <p style={{ fontSize: 13, color: '#666', marginTop: 2 }}>
-            {stats?.totalAgents ?? '—'} agents · {stats?.totalCalls?.toLocaleString() ?? '—'} calls today
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <a href="/deploy" style={{ ...btnStyle, background: '#7c5cfc', color: '#fff', border: 'none' }}>Deploy Agent</a>
-          <a href="/dashboard" style={btnStyle}>Dashboard</a>
-        </div>
+      {/* ── STATS BAR ── */}
+      <div style={{ borderBottom: '1px solid rgba(255,255,255,.06)', padding: '12px 32px', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <p style={{ fontSize: 13, color: '#555' }}>
+          <span style={{ color: '#888', fontWeight: 600 }}>{stats?.totalAgents ?? '—'}</span> agents live
+          &nbsp;·&nbsp;
+          <span style={{ color: '#888', fontWeight: 600 }}>{stats?.totalCalls?.toLocaleString() ?? '—'}</span> calls today
+        </p>
       </div>
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 32px' }}>
@@ -169,6 +165,7 @@ export default function MarketplacePage() {
         />
       )}
     </main>
+    </>
   );
 }
 

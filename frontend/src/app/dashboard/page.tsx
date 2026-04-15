@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
 import { api, PlatformStats } from '../../lib/api';
+import { Navbar } from '../../components/Navbar';
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
@@ -26,13 +27,16 @@ export default function DashboardPage() {
 
   if (!isConnected) {
     return (
-      <main style={{ minHeight: '100vh', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Figtree', sans-serif" }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 16 }}>🔐</div>
-          <h2 style={{ fontWeight: 900, fontSize: 24, marginBottom: 8 }}>Connect Your Wallet</h2>
-          <p style={{ color: '#666', fontSize: 14 }}>Connect your wallet to view your dashboard</p>
-        </div>
-      </main>
+      <>
+        <Navbar />
+        <main style={{ minHeight: '100vh', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Figtree', sans-serif" }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 32, marginBottom: 16 }}>🔐</div>
+            <h2 style={{ fontWeight: 900, fontSize: 24, marginBottom: 8 }}>Connect Your Wallet</h2>
+            <p style={{ color: '#666', fontSize: 14 }}>Use the button in the top-right to connect</p>
+          </div>
+        </main>
+      </>
     );
   }
 
@@ -45,11 +49,13 @@ export default function DashboardPage() {
   ) || 0;
 
   return (
+    <>
+    <Navbar />
     <main style={{ minHeight: '100vh', background: '#080808', color: '#fff', fontFamily: "'Figtree', sans-serif" }}>
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,.06)', padding: '24px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ borderBottom: '1px solid rgba(255,255,255,.06)', padding: '20px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <h1 style={{ fontWeight: 900, fontSize: 24, letterSpacing: '-1px' }}>Dashboard</h1>
-          <p style={{ fontSize: 12, color: '#555', fontFamily: 'monospace', marginTop: 2 }}>{address}</p>
+          <h1 style={{ fontWeight: 900, fontSize: 22, letterSpacing: '-1px' }}>Dashboard</h1>
+          <p style={{ fontSize: 11, color: '#555', fontFamily: 'monospace', marginTop: 2 }}>{address}</p>
         </div>
         <a href="/deploy" style={{ background: '#7c5cfc', color: '#fff', border: 'none', borderRadius: 999, padding: '9px 20px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
           + Deploy Agent
@@ -146,5 +152,6 @@ export default function DashboardPage() {
         </div>
       </div>
     </main>
+    </>
   );
 }

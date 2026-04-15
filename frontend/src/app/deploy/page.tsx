@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAccount, useConnect } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { api } from '../../lib/api';
+import { Navbar } from '../../components/Navbar';
 
 const CATEGORIES = ['DEFI', 'RISK', 'TRADING', 'INTELLIGENCE', 'PAYMENTS', 'INFRASTRUCTURE', 'OTHER'];
 
@@ -61,6 +62,8 @@ export default function DeployPage() {
   };
 
   return (
+    <>
+    <Navbar />
     <main style={{ minHeight: '100vh', background: '#080808', color: '#fff', fontFamily: "'Figtree', sans-serif" }}>
       <div style={{ borderBottom: '1px solid rgba(255,255,255,.06)', padding: '24px 32px' }}>
         <a href="/marketplace" style={{ fontSize: 13, color: '#666', textDecoration: 'none' }}>← Back to Marketplace</a>
@@ -235,5 +238,6 @@ export default function DeployPage() {
         )}
       </div>
     </main>
+    </>
   );
 }
