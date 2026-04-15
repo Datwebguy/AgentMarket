@@ -80,36 +80,39 @@ app.use(errorHandler);
 // take effect automatically without a manual seed run.
 async function runStartupMigrations() {
   try {
-    const BINANCE_CRYPTO_CODE = `async function run(input) {
+    const OKX_CRYPTO_CODE = `async function run(input) {
   const raw = (input.symbol || input.ticker || input.coin || input.name || input.input || 'ETH')
     .toUpperCase().trim();
   const nameToSymbol = {
-    BITCOIN:'BTC',ETHEREUM:'ETH',SOLANA:'SOL',BINANCECOIN:'BNB',RIPPLE:'XRP',
+    BITCOIN:'BTC',ETHEREUM:'ETH',SOLANA:'SOL',RIPPLE:'XRP',
     CARDANO:'ADA',DOGECOIN:'DOGE',AVALANCHE:'AVAX',POLKADOT:'DOT',CHAINLINK:'LINK',
     POLYGON:'MATIC',POL:'MATIC',UNISWAP:'UNI',COSMOS:'ATOM',LITECOIN:'LTC',
     ARBITRUM:'ARB',OPTIMISM:'OP',APTOS:'APT',NEAR:'NEAR',SUI:'SUI',
     OKB:'OKB',TONCOIN:'TON',PEPE:'PEPE',SHIBA:'SHIB',SHIBAINU:'SHIB',
+    BITCOIN2:'BTC',ETHEREUM2:'ETH',
   };
   const symbol = nameToSymbol[raw] || raw;
-  const pair   = symbol + 'USDT';
-  const resp   = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=' + pair);
-  if (!resp.ok) {
-    if (resp.status === 400) return { error: 'Coin not found: ' + symbol, hint: 'Try: BTC, ETH, SOL, BNB, XRP, ADA, DOGE, AVAX, DOT, LINK, MATIC, ARB, OP, APT, NEAR, SUI, TON' };
-    throw new Error('Binance API error: ' + resp.status);
+  const instId = symbol + '-USDT';
+  const resp = await fetch('https://www.okx.com/api/v5/market/ticker?instId=' + instId);
+  if (!resp.ok) throw new Error('OKX API error: ' + resp.status);
+  const json = await resp.json();
+  if (!json.data || !json.data[0] || !json.data[0].last) {
+    return { error: 'Coin not found: ' + symbol, hint: 'Try: BTC, ETH, SOL, OKB, XRP, ADA, DOGE, AVAX, DOT, LINK, MATIC, UNI, ATOM, LTC, ARB, OP, APT, NEAR, SUI, TON, PEPE, SHIB' };
   }
-  const d = await resp.json();
-  const price = parseFloat(d.lastPrice);
-  const change = parseFloat(d.priceChangePercent);
+  const d = json.data[0];
+  const price  = parseFloat(d.last);
+  const open   = parseFloat(d.open24h);
+  const change = open > 0 ? ((price - open) / open * 100) : 0;
   return {
-    symbol, pair,
+    symbol, instId,
     priceUsd:  parseFloat(price.toFixed(price < 1 ? 8 : 2)),
     change24h: parseFloat(change.toFixed(2)),
     direction: change >= 0 ? 'up' : 'down',
-    high24h:   parseFloat(parseFloat(d.highPrice).toFixed(2)),
-    low24h:    parseFloat(parseFloat(d.lowPrice).toFixed(2)),
-    volume24h: parseFloat(parseFloat(d.quoteVolume).toFixed(0)),
+    high24h:   parseFloat(parseFloat(d.high24h).toFixed(price < 1 ? 6 : 2)),
+    low24h:    parseFloat(parseFloat(d.low24h).toFixed(price < 1 ? 6 : 2)),
+    volume24h: parseFloat(parseFloat(d.volCcy24h || d.vol24h || '0').toFixed(0)),
     summary:   symbol + ' is $' + price.toFixed(price < 1 ? 6 : 2) + ' (' + (change >= 0 ? '+' : '') + change.toFixed(2) + '% 24h)',
-    source: 'Binance', timestamp: new Date().toISOString(),
+    source: 'OKX', timestamp: new Date().toISOString(),
   };
 }`;
 
@@ -146,7 +149,7 @@ async function runStartupMigrations() {
 }`;
 
     const migrations = [
-      { slug: 'crypto-price-checker',  code: BINANCE_CRYPTO_CODE },
+      { slug: 'crypto-price-checker',  code: OKX_CRYPTO_CODE },
       { slug: 'defi-tvl-checker',      code: DEFI_TVL_CODE       },
       { slug: 'currency-exchange-rate', code: FOREX_CODE          },
     ];
