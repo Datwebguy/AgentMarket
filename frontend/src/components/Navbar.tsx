@@ -87,7 +87,7 @@ export function Navbar() {
           </a>
 
           {/* Desktop links */}
-          <div className="hidden md:flex gap-0.5 flex-1">
+          <div className="hidden lg:flex gap-0.5 flex-1">
             {NAV_LINKS.map(l => (
               <a key={l.href} href={l.href}
                 className="text-[13px] font-medium text-[#888] px-3 py-1.5 rounded-lg no-underline transition-colors hover:text-white">
@@ -97,19 +97,19 @@ export function Navbar() {
           </div>
 
           {/* Push wallet to right */}
-          <div className="flex-1 md:hidden" />
+          <div className="flex-1 lg:hidden" />
 
           {/* Wrong chain — desktop */}
           {wrongChain && (
             <button onClick={() => switchToXLayer().catch(() => {})}
-              className="hidden md:block text-[11px] font-bold px-3 py-1.5 rounded-full cursor-pointer flex-shrink-0"
+              className="hidden lg:block text-[11px] font-bold px-3 py-1.5 rounded-full cursor-pointer flex-shrink-0"
               style={{ background: 'rgba(249,115,22,.15)', color: '#f97316', border: '1px solid rgba(249,115,22,.3)', fontFamily: 'inherit' }}>
               Switch to XLayer
             </button>
           )}
 
           {/* Desktop wallet */}
-          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
+          <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
             {!isConnected ? (
               <button onClick={handleConnect} disabled={signing}
                 className="text-[13px] font-bold px-4 py-2 rounded-full text-white cursor-pointer disabled:opacity-60 flex-shrink-0"
@@ -146,9 +146,9 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Hamburger — mobile only */}
+          {/* Hamburger — shown on anything below lg */}
           <button onClick={() => setMobileOpen(o => !o)}
-            className="flex md:hidden flex-col justify-center items-center gap-[5px] p-2 rounded-lg bg-transparent border-none cursor-pointer flex-shrink-0"
+            className="flex lg:hidden flex-col justify-center items-center gap-[5px] p-2 rounded-lg bg-transparent border-none cursor-pointer flex-shrink-0"
             aria-label="Toggle menu">
             <span className="block w-5 h-0.5 bg-white rounded-full transition-all duration-200"
               style={{ transform: mobileOpen ? 'rotate(45deg) translate(0px, 7px)' : 'none' }} />
@@ -162,7 +162,7 @@ export function Navbar() {
 
       {/* ── MOBILE DRAWER ───────────────────────────────────── */}
       {mobileOpen && (
-        <div className="fixed top-14 left-0 right-0 z-40 md:hidden flex flex-col"
+        <div className="fixed top-14 left-0 right-0 z-40 lg:hidden flex flex-col"
           style={{ background: '#0e0e0e', borderBottom: '1px solid rgba(255,255,255,.08)', boxShadow: '0 12px 40px rgba(0,0,0,.8)', fontFamily: "'Figtree', sans-serif" }}>
 
           {/* Nav links */}

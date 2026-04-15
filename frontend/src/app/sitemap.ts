@@ -1,16 +1,24 @@
 import { MetadataRoute } from 'next';
 
+export const dynamic = 'force-dynamic';
+
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://agentmarket.xyz';
 
+function safeDate(val: unknown): Date {
+  const d = new Date(val as string);
+  return isNaN(d.getTime()) ? new Date() : d;
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const now = new Date();
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
-    { url: APP_URL,             lastModified: new Date(), changeFrequency: 'daily',   priority: 1.0 },
-    { url: `${APP_URL}/marketplace`, lastModified: new Date(), changeFrequency: 'hourly', priority: 0.9 },
-    { url: `${APP_URL}/pricing`,     lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${APP_URL}/docs`,        lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
-    { url: `${APP_URL}/deploy`,      lastModified: new Date(), changeFrequency: 'monthly',priority: 0.7 },
-    { url: `${APP_URL}/signin`,      lastModified: new Date(), changeFrequency: 'monthly',priority: 0.5 },
+    { url: APP_URL,                    lastModified: now, changeFrequency: 'daily',   priority: 1.0 },
+    { url: `${APP_URL}/marketplace`,   lastModified: now, changeFrequency: 'hourly',  priority: 0.9 },
+    { url: `${APP_URL}/pricing`,       lastModified: now, changeFrequency: 'weekly',  priority: 0.8 },
+    { url: `${APP_URL}/docs`,          lastModified: now, changeFrequency: 'weekly',  priority: 0.8 },
+    { url: `${APP_URL}/deploy`,        lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${APP_URL}/signin`,        lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
   ];
 
   // Dynamic agent pages — fetch from API
@@ -21,7 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       const data = await res.json();
       const agentPages: MetadataRoute.Sitemap = data.agents.map((agent: any) => ({
         url:              `${APP_URL}/marketplace/${agent.slug}`,
-        lastModified:     new Date(agent.updatedAt),
+        lastModified:     safeDate(agent.updatedAt),
         changeFrequency:  'hourly',
         priority:         0.85,
       }));
