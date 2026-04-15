@@ -12,7 +12,8 @@ const OWNER_WALLET = process.env.SEED_OWNER_WALLET || '0x00000000000000000000000
 // ── Agent 1: Crypto Price Checker (uses CoinCap — no rate limits) ─────────────
 const CRYPTO_PRICE_CODE = `
 async function run(input) {
-  const raw = (input.symbol || input.ticker || input.coin || 'bitcoin').toLowerCase().trim();
+  // Accept any of these input keys: symbol, ticker, coin, name, input
+  const raw = (input.symbol || input.ticker || input.coin || input.name || input.input || 'bitcoin').toLowerCase().trim();
 
   const idMap = {
     btc: 'bitcoin', bitcoin: 'bitcoin',
