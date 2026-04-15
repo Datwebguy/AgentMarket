@@ -1,20 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useQuery }            from '@tanstack/react-query';
+import { useState, useEffect, CSSProperties } from 'react';
+import { useQuery }   from '@tanstack/react-query';
 import { api, Agent, PlatformStats } from '../../lib/api';
-import { AgentCard }           from '../../components/AgentCard';
-import { CallModal }           from '../../components/CallModal';
-import { Navbar }              from '../../components/Navbar';
+import { CallModal }  from '../../components/CallModal';
+import { Navbar }     from '../../components/Navbar';
+
+/* ─── constants ─────────────────────────────────────────────────── */
+const FONT = "'Figtree', sans-serif";
 
 const CATEGORIES = [
-  { key: '',               label: 'All'            },
-  { key: 'DEFI',           label: 'DeFi'           },
-  { key: 'RISK',           label: 'Risk'           },
-  { key: 'TRADING',        label: 'Trading'        },
-  { key: 'INTELLIGENCE',   label: 'Intelligence'   },
-  { key: 'PAYMENTS',       label: 'Payments'       },
-  { key: 'INFRASTRUCTURE', label: 'Infra'          },
+  { key: '',               label: 'All'          },
+  { key: 'DEFI',           label: 'DeFi'         },
+  { key: 'RISK',           label: 'Risk'         },
+  { key: 'TRADING',        label: 'Trading'      },
+  { key: 'INTELLIGENCE',   label: 'Intelligence' },
+  { key: 'PAYMENTS',       label: 'Payments'     },
+  { key: 'INFRASTRUCTURE', label: 'Infra'        },
 ];
 
 const SORT_OPTIONS = [
@@ -25,8 +27,140 @@ const SORT_OPTIONS = [
   { value: 'createdAt',     label: 'Newest'       },
 ];
 
-const FONT = "'Figtree', sans-serif";
+const CAT_COLOR: Record<string, string> = {
+  DEFI: '#60a5fa', RISK: '#f87171', TRADING: '#34d399',
+  INTELLIGENCE: '#f97316', PAYMENTS: '#a78bfa',
+  INFRASTRUCTURE: '#94a3b8', OTHER: '#6b7280',
+};
 
+/* ─── AgentCard ─────────────────────────────────────────────────── */
+function AgentCard({ agent, onCall }: { agent: Agent; onCall: () => void }) {
+  const [hover, setHover] = useState(false);
+  const cat = agent.category || 'OTHER';
+  const catColor = CAT_COLOR[cat] || '#888';
+
+  return (
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        background:   '#101010',
+        border:       `1px solid ${hover ? 'rgba(249,115,22,0.25)' : 'rgba(255,255,255,0.07)'}`,
+        borderRadius: '16px',
+        padding:      '20px',
+        display:      'flex',
+        flexDirection:'column',
+        gap:          '12px',
+        fontFamily:   FONT,
+        transition:   'border-color 0.2s',
+        cursor:       'default',
+      }}
+    >
+      {/* Top row: icon + badges */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
+        <div style={{
+          width: 44, height: 44, borderRadius: '12px', flexShrink: 0,
+          background: 'rgba(249,115,22,0.1)',
+          border: '1px solid rgba(249,115,22,0.2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '20px',
+        }}>
+          🤖
+        </div>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <span style={{
+            fontSize: '10px', fontWeight: 700, padding: '3px 8px',
+            borderRadius: '999px', background: `${catColor}18`, color: catColor,
+            border: `1px solid ${catColor}33`, whiteSpace: 'nowrap',
+          }}>
+            {cat}
+          </span>
+          {agent.isVerified && (
+            <span style={{
+              fontSize: '10px', fontWeight: 700, padding: '3px 8px',
+              borderRadius: '999px', background: 'rgba(0,212,160,0.1)',
+              color: '#00d4a0', border: '1px solid rgba(0,212,160,0.25)',
+              whiteSpace: 'nowrap',
+            }}>
+              ✓ VERIFIED
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Name + description */}
+      <div>
+        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>
+          {agent.name}
+        </h3>
+        <p style={{ margin: '6px 0 0', fontSize: '13px', color: '#666', lineHeight: 1.5,
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          {agent.description}
+        </p>
+      </div>
+
+      {/* Stats row */}
+      <div style={{ display: 'flex', gap: '20px' }}>
+        {[
+          { label: 'Calls',        value: Number(agent.totalCalls || 0).toLocaleString() },
+          { label: 'Avg Response', value: agent.avgResponseMs ? `${agent.avgResponseMs}ms` : '—'   },
+          { label: 'Uptime',       value: `${parseFloat(String(agent.uptimePct || 100)).toFixed(1)}%` },
+        ].map(s => (
+          <div key={s.label}>
+            <div style={{ fontSize: '14px', fontWeight: 700, color: '#fff' }}>{s.value}</div>
+            <div style={{ fontSize: '10px', color: '#555', marginTop: '1px' }}>{s.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Price + CTA */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div>
+          <div style={{ fontSize: '9px', fontWeight: 700, color: '#555', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Per Call</div>
+          <div style={{ fontSize: '18px', fontWeight: 900, color: '#00d4a0', marginTop: '1px' }}>
+            {parseFloat(String(agent.pricePerCallUsdc)).toFixed(4)} <span style={{ fontSize: '12px', fontWeight: 600 }}>USDC</span>
+          </div>
+        </div>
+        <button onClick={onCall} style={{
+          padding:      '10px 22px',
+          borderRadius: '999px',
+          background:   '#f97316',
+          border:       'none',
+          color:        '#fff',
+          fontSize:     '13px',
+          fontWeight:   700,
+          cursor:       'pointer',
+          whiteSpace:   'nowrap',
+          fontFamily:   FONT,
+        }}>
+          Call Agent
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Skeleton card ─────────────────────────────────────────────── */
+function SkeletonCard() {
+  return (
+    <div style={{
+      background: '#101010', border: '1px solid rgba(255,255,255,0.06)',
+      borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px',
+    }}>
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ width: 44, height: 44, borderRadius: '12px', background: 'rgba(255,255,255,0.05)' }} />
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ height: 8, width: '60%', borderRadius: 4, background: 'rgba(255,255,255,0.05)' }} />
+          <div style={{ height: 8, width: '40%', borderRadius: 4, background: 'rgba(255,255,255,0.05)' }} />
+        </div>
+      </div>
+      <div style={{ height: 10, width: '80%', borderRadius: 4, background: 'rgba(255,255,255,0.05)' }} />
+      <div style={{ height: 10, width: '60%', borderRadius: 4, background: 'rgba(255,255,255,0.05)' }} />
+    </div>
+  );
+}
+
+/* ─── Page ──────────────────────────────────────────────────────── */
 export default function MarketplacePage() {
   const [category, setCategory] = useState('');
   const [search,   setSearch]   = useState('');
@@ -51,128 +185,190 @@ export default function MarketplacePage() {
 
   const isEmpty = !isLoading && !error && data?.agents.length === 0;
 
+  /* shared styles */
+  const container: CSSProperties = { maxWidth: '1200px', margin: '0 auto', padding: '0 20px' };
+
   return (
     <>
       <Navbar />
       <main style={{ minHeight: '100vh', background: '#080808', color: '#fff', fontFamily: FONT }}>
 
-        {/* ── HEADER ──────────────────────────────── */}
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-8 pt-6 sm:pt-10 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-[24px] sm:text-[32px] font-black tracking-tight text-white m-0">Marketplace</h1>
-            <p className="text-[13px] sm:text-[14px] mt-1 m-0" style={{ color: '#555' }}>
-              {stats
-                ? `${stats.totalAgents} agents live · ${stats.totalCalls?.toLocaleString()} calls today`
-                : 'Discover and call AI agents on XLayer'}
-            </p>
+        {/* ── HEADER ───────────────────────────────────────────── */}
+        <div style={{ ...container, paddingTop: '32px', paddingBottom: '0' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+            <div>
+              <h1 style={{ margin: 0, fontSize: 'clamp(24px,4vw,36px)', fontWeight: 900, letterSpacing: '-1px', color: '#fff' }}>
+                Marketplace
+              </h1>
+              <p style={{ margin: '4px 0 0', fontSize: '14px', color: '#555' }}>
+                {stats
+                  ? `${stats.totalAgents} agent${stats.totalAgents === 1 ? '' : 's'} live · ${Number(stats.totalCalls || 0).toLocaleString()} calls today`
+                  : 'Discover and call AI agents on XLayer'}
+              </p>
+            </div>
+            <a href="/deploy" style={{
+              padding:        '10px 22px',
+              borderRadius:   '999px',
+              background:     '#f97316',
+              color:          '#fff',
+              fontSize:       '13px',
+              fontWeight:     700,
+              textDecoration: 'none',
+              whiteSpace:     'nowrap',
+              flexShrink:     0,
+            }}>
+              + Deploy Agent
+            </a>
           </div>
-          <a href="/deploy"
-            className="text-[13px] font-bold text-white no-underline rounded-full px-5 py-2.5 whitespace-nowrap"
-            style={{ background: '#f97316' }}>
-            + Deploy Agent
-          </a>
         </div>
 
-        {/* ── STATS STRIP ─────────────────────────── */}
+        {/* ── STATS STRIP ──────────────────────────────────────── */}
         {stats && (
-          <div className="max-w-[1200px] mx-auto px-4 sm:px-8 mt-5">
-            <div className="grid grid-cols-2 sm:grid-cols-4 rounded-xl overflow-hidden"
-              style={{ border: '1px solid rgba(255,255,255,.06)', background: '#101010' }}>
+          <div style={{ ...container, paddingTop: '20px' }}>
+            <div className="stats-grid" style={{
+              display:         'grid',
+              gridTemplateColumns: 'repeat(4, 1fr)',
+              border:          '1px solid rgba(255,255,255,0.07)',
+              borderRadius:    '14px',
+              background:      '#101010',
+              overflow:        'hidden',
+            }}>
               {[
-                { label: 'Agents Live',    value: stats.totalAgents,                                          color: '#f97316' },
-                { label: 'Calls Today',    value: stats.totalCalls?.toLocaleString(),                         color: '#00d4a0' },
-                { label: 'Volume Settled', value: `$${parseFloat(stats.totalVolumeUsdc || '0').toFixed(2)}`,  color: '#fff'    },
-                { label: 'Avg Response',   value: `${stats.avgResponseMs || 0}ms`,                            color: '#fff'    },
+                { label: 'Agents Live',    value: stats.totalAgents,                                         color: '#f97316' },
+                { label: 'Calls Today',    value: Number(stats.totalCalls || 0).toLocaleString(),             color: '#00d4a0' },
+                { label: 'Volume Settled', value: `$${parseFloat(String(stats.totalVolumeUsdc || 0)).toFixed(2)}`, color: '#fff' },
+                { label: 'Avg Response',   value: `${stats.avgResponseMs || 0}ms`,                           color: '#fff'    },
               ].map((s, i) => (
-                <div key={s.label} className="flex flex-col items-center justify-center py-4 px-3"
-                  style={{ borderRight: (i % 2 === 0 || i < 2) ? '1px solid rgba(255,255,255,.06)' : 'none',
-                           borderBottom: i < 2 ? '1px solid rgba(255,255,255,.06)' : 'none' }}>
-                  <div className="font-black text-[18px] sm:text-[22px] tracking-tight leading-none mb-1"
-                    style={{ color: s.color }}>{s.value}</div>
-                  <div className="text-[10px] sm:text-[11px] font-mono tracking-wide uppercase" style={{ color: '#444' }}>{s.label}</div>
+                <div key={s.label} style={{
+                  padding:     '18px 16px',
+                  textAlign:   'center',
+                  borderRight: i < 3 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+                }}>
+                  <div style={{ fontSize: 'clamp(18px,2.5vw,26px)', fontWeight: 900, color: s.color, lineHeight: 1 }}>
+                    {s.value}
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#555', marginTop: '6px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    {s.label}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* ── FILTERS ─────────────────────────────── */}
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-8 mt-5 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
-
-          {/* Search */}
-          <div className="flex items-center gap-2 rounded-xl px-4 h-10 flex-1 sm:flex-initial sm:min-w-[200px]"
-            style={{ background: '#111', border: '1px solid rgba(255,255,255,.1)' }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" className="flex-shrink-0">
+        {/* ── FILTERS ──────────────────────────────────────────── */}
+        <div style={{ ...container, paddingTop: '20px' }}>
+          {/* Row 1: search */}
+          <div style={{
+            display:     'flex',
+            alignItems:  'center',
+            gap:         '8px',
+            padding:     '0 14px',
+            height:      '42px',
+            borderRadius:'12px',
+            border:      '1px solid rgba(255,255,255,0.1)',
+            background:  '#111',
+            marginBottom:'12px',
+          }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search agents..."
-              className="bg-transparent border-none outline-none text-white text-[13px] w-full"
-              style={{ fontFamily: FONT }} />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search agents..."
+              style={{
+                flex:       1,
+                background: 'transparent',
+                border:     'none',
+                outline:    'none',
+                color:      '#fff',
+                fontSize:   '13px',
+                fontFamily: FONT,
+              }}
+            />
           </div>
 
-          {/* Category pills — scrollable on mobile */}
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5 flex-1 scrollbar-hide">
-            {CATEGORIES.map(cat => {
-              const active = category === cat.key;
-              return (
-                <button key={cat.key} onClick={() => setCategory(cat.key)}
-                  className="text-[12px] px-3 py-1.5 rounded-full whitespace-nowrap cursor-pointer flex-shrink-0 transition-all"
-                  style={{
-                    border: `1px solid ${active ? 'rgba(249,115,22,.4)' : 'rgba(255,255,255,.08)'}`,
-                    background: active ? 'rgba(249,115,22,.18)' : 'rgba(255,255,255,.04)',
-                    color:      active ? '#f97316' : '#777',
-                    fontWeight: active ? 700 : 500,
-                    fontFamily: FONT,
+          {/* Row 2: pills + sort */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* Pills — scrollable, takes remaining space */}
+            <div style={{
+              display:    'flex',
+              gap:        '6px',
+              overflowX:  'auto',
+              flex:       '1 1 0',
+              minWidth:   0,
+              paddingBottom: '2px',
+              scrollbarWidth: 'none',
+            }}>
+              {CATEGORIES.map(cat => {
+                const active = category === cat.key;
+                return (
+                  <button key={cat.key} onClick={() => setCategory(cat.key)} style={{
+                    padding:      '6px 14px',
+                    borderRadius: '999px',
+                    border:       `1px solid ${active ? 'rgba(249,115,22,0.4)' : 'rgba(255,255,255,0.08)'}`,
+                    background:   active ? 'rgba(249,115,22,0.15)' : 'rgba(255,255,255,0.04)',
+                    color:        active ? '#f97316' : '#777',
+                    fontSize:     '12px',
+                    fontWeight:   active ? 700 : 500,
+                    cursor:       'pointer',
+                    whiteSpace:   'nowrap',
+                    flexShrink:   0,
+                    fontFamily:   FONT,
                   }}>
-                  {cat.label}
-                </button>
-              );
-            })}
-          </div>
+                    {cat.label}
+                  </button>
+                );
+              })}
+            </div>
 
-          {/* Sort */}
-          <select value={sort} onChange={e => setSort(e.target.value)}
-            className="rounded-xl px-4 h-10 text-[13px] cursor-pointer outline-none flex-shrink-0"
-            style={{ background: '#111', border: '1px solid rgba(255,255,255,.1)', color: '#888', fontFamily: FONT }}>
-            {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
+            {/* Sort — never shrinks */}
+            <select
+              value={sort}
+              onChange={e => setSort(e.target.value)}
+              style={{
+                height:       '38px',
+                padding:      '0 12px',
+                borderRadius: '10px',
+                border:       '1px solid rgba(255,255,255,0.1)',
+                background:   '#111',
+                color:        '#888',
+                fontSize:     '13px',
+                cursor:       'pointer',
+                outline:      'none',
+                flexShrink:   0,
+                fontFamily:   FONT,
+              }}
+            >
+              {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
         </div>
 
-        {/* ── CONTENT ─────────────────────────────── */}
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-8 py-6 pb-20">
+        {/* ── CONTENT ──────────────────────────────────────────── */}
+        <div style={{ ...container, paddingTop: '24px', paddingBottom: '80px' }}>
 
-          {/* Loading skeletons */}
+          {/* Loading */}
           {isLoading && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="rounded-2xl p-5 min-h-[200px]"
-                  style={{ background: '#101010', border: '1px solid rgba(255,255,255,.06)' }}>
-                  <div className="h-3 rounded mb-4 w-2/5" style={{ background: 'rgba(255,255,255,.05)' }} />
-                  <div className="h-5 rounded mb-3 w-3/4" style={{ background: 'rgba(255,255,255,.05)' }} />
-                  <div className="h-3 rounded mb-2 w-3/5" style={{ background: 'rgba(255,255,255,.05)' }} />
-                  <div className="h-3 rounded w-1/2"       style={{ background: 'rgba(255,255,255,.05)' }} />
-                </div>
-              ))}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+              {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
             </div>
           )}
 
           {/* Error */}
           {error && !isLoading && (
-            <div className="flex flex-col items-center py-20 text-center gap-3">
-              <div className="text-[40px] mb-1">⚡</div>
-              <div className="text-[18px] font-black tracking-tight">Backend error</div>
-              <div className="text-[13px] max-w-[420px] leading-relaxed" style={{ color: '#666' }}>
-                The API returned an error. Check the Railway logs for a database connection issue.
+            <div style={{ textAlign: 'center', padding: '80px 20px' }}>
+              <div style={{ fontSize: '40px', marginBottom: '16px' }}>⚡</div>
+              <div style={{ fontSize: '18px', fontWeight: 900 }}>Failed to load agents</div>
+              <div style={{ fontSize: '13px', color: '#555', marginTop: '8px', marginBottom: '24px' }}>
+                Check your connection or try again.
               </div>
-              {(error as any)?.response?.data?.detail && (
-                <code className="text-[11px] rounded-xl px-4 py-2 max-w-[480px] text-left break-all"
-                  style={{ color: '#ef4444', background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.15)' }}>
-                  {(error as any).response.data.detail}
-                </code>
-              )}
-              <button onClick={() => refetch()}
-                className="mt-2 text-[13px] font-bold text-white px-6 py-2.5 rounded-full cursor-pointer"
-                style={{ background: '#f97316', border: 'none', fontFamily: FONT }}>
+              <button onClick={() => refetch()} style={{
+                padding: '10px 24px', borderRadius: '999px', background: '#f97316',
+                border: 'none', color: '#fff', fontSize: '13px', fontWeight: 700,
+                cursor: 'pointer', fontFamily: FONT,
+              }}>
                 Try Again
               </button>
             </div>
@@ -180,28 +376,32 @@ export default function MarketplacePage() {
 
           {/* Empty */}
           {isEmpty && (
-            <div className="flex flex-col items-center py-24 text-center gap-3">
-              <div className="text-[48px] opacity-20 mb-2">🤖</div>
-              <div className="text-[18px] font-black tracking-tight">
+            <div style={{ textAlign: 'center', padding: '80px 20px' }}>
+              <div style={{ fontSize: '48px', opacity: 0.2, marginBottom: '16px' }}>🤖</div>
+              <div style={{ fontSize: '18px', fontWeight: 900 }}>
                 {search || category ? 'No agents match your filters' : 'No agents deployed yet'}
               </div>
-              <div className="text-[13px] max-w-[360px] leading-relaxed" style={{ color: '#555' }}>
+              <div style={{ fontSize: '13px', color: '#555', marginTop: '8px', marginBottom: '24px', maxWidth: '360px', margin: '8px auto 24px' }}>
                 {search || category
                   ? 'Try clearing your search or selecting a different category.'
                   : 'Be the first builder to deploy an AI agent and start earning USDC per call.'}
               </div>
-              {!search && !category && (
-                <a href="/deploy" className="mt-3 text-[14px] font-bold text-white no-underline rounded-full px-7 py-3"
-                  style={{ background: '#f97316' }}>
-                  Deploy the First Agent
-                </a>
-              )}
-              {(search || category) && (
-                <button onClick={() => { setSearch(''); setCategory(''); }}
-                  className="mt-2 text-[13px] font-semibold px-6 py-2.5 rounded-full cursor-pointer"
-                  style={{ background: 'transparent', color: '#666', border: '1px solid rgba(255,255,255,.1)', fontFamily: FONT }}>
+              {(search || category) ? (
+                <button onClick={() => { setSearch(''); setCategory(''); }} style={{
+                  padding: '10px 24px', borderRadius: '999px', background: 'transparent',
+                  border: '1px solid rgba(255,255,255,0.1)', color: '#666', fontSize: '13px',
+                  fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
+                }}>
                   Clear Filters
                 </button>
+              ) : (
+                <a href="/deploy" style={{
+                  display: 'inline-block', padding: '12px 28px', borderRadius: '999px',
+                  background: '#f97316', color: '#fff', fontSize: '14px', fontWeight: 700,
+                  textDecoration: 'none',
+                }}>
+                  Deploy the First Agent
+                </a>
               )}
             </div>
           )}
@@ -209,13 +409,13 @@ export default function MarketplacePage() {
           {/* Agent grid */}
           {!isLoading && !error && data && data.agents.length > 0 && (
             <>
-              <p className="text-[12px] font-mono mb-4" style={{ color: '#444' }}>
+              <p style={{ fontSize: '12px', color: '#444', marginBottom: '16px', fontFamily: 'monospace' }}>
                 {data.pagination.total} {data.pagination.total === 1 ? 'agent' : 'agents'}
                 {search && ` matching "${search}"`}
                 {category && ` in ${CATEGORIES.find(c => c.key === category)?.label}`}
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
                 {data.agents.map(agent => (
                   <AgentCard key={agent.id} agent={agent} onCall={() => setSelected(agent)} />
                 ))}
@@ -223,27 +423,22 @@ export default function MarketplacePage() {
 
               {/* Pagination */}
               {data.pagination.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-12 flex-wrap">
-                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                    className="text-[13px] font-semibold px-5 py-2 rounded-full cursor-pointer disabled:opacity-30"
-                    style={{ background: 'transparent', color: '#888', border: '1px solid rgba(255,255,255,.1)', fontFamily: FONT }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '48px', flexWrap: 'wrap' }}>
+                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{
+                    padding: '8px 20px', borderRadius: '999px', background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.1)', color: '#888', fontSize: '13px',
+                    fontWeight: 600, cursor: 'pointer', opacity: page === 1 ? 0.3 : 1, fontFamily: FONT,
+                  }}>
                     ← Prev
                   </button>
-                  {Array.from({ length: data.pagination.totalPages }, (_, i) => i + 1)
-                    .filter(p => p === 1 || p === data.pagination.totalPages || Math.abs(p - page) <= 1)
-                    .map((p, idx, arr) => (
-                      <span key={p} className="flex items-center gap-1">
-                        {idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ color: '#333' }}>…</span>}
-                        <button onClick={() => setPage(p)}
-                          className="w-9 h-9 rounded-full text-[13px] font-semibold cursor-pointer border-none transition-all"
-                          style={{ background: p === page ? '#f97316' : 'transparent', color: p === page ? '#fff' : '#666', fontFamily: FONT }}>
-                          {p}
-                        </button>
-                      </span>
-                    ))}
-                  <button onClick={() => setPage(p => Math.min(data.pagination.totalPages, p + 1))} disabled={page === data.pagination.totalPages}
-                    className="text-[13px] font-semibold px-5 py-2 rounded-full cursor-pointer disabled:opacity-30"
-                    style={{ background: 'transparent', color: '#888', border: '1px solid rgba(255,255,255,.1)', fontFamily: FONT }}>
+                  <span style={{ fontSize: '13px', color: '#555' }}>
+                    Page {page} of {data.pagination.totalPages}
+                  </span>
+                  <button onClick={() => setPage(p => Math.min(data.pagination.totalPages, p + 1))} disabled={page === data.pagination.totalPages} style={{
+                    padding: '8px 20px', borderRadius: '999px', background: 'transparent',
+                    border: '1px solid rgba(255,255,255,0.1)', color: '#888', fontSize: '13px',
+                    fontWeight: 600, cursor: 'pointer', opacity: page === data.pagination.totalPages ? 0.3 : 1, fontFamily: FONT,
+                  }}>
                     Next →
                   </button>
                 </div>
@@ -254,6 +449,13 @@ export default function MarketplacePage() {
 
         {selected && <CallModal agent={selected} onClose={() => setSelected(null)} />}
       </main>
+
+      {/* Mobile responsive overrides */}
+      <style>{`
+        @media (max-width: 600px) {
+          .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
+        }
+      `}</style>
     </>
   );
 }
