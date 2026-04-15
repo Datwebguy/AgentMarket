@@ -1,16 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { useAccount, useConnect } from 'wagmi';
-import { injected } from 'wagmi/connectors';
+import { useAccount } from 'wagmi';
 import { api } from '../../lib/api';
 import { Navbar } from '../../components/Navbar';
+import { useAuthStore } from '../../hooks/useAuthStore';
 
 const CATEGORIES = ['DEFI', 'RISK', 'TRADING', 'INTELLIGENCE', 'PAYMENTS', 'INFRASTRUCTURE', 'OTHER'];
 
 export default function DeployPage() {
   const { isConnected } = useAccount();
-  const { connectAsync } = useConnect();
+  const { token } = useAuthStore();
 
   const [form, setForm] = useState({
     name:             '',
@@ -27,10 +27,12 @@ export default function DeployPage() {
 
   async function deploy(e: React.FormEvent) {
     e.preventDefault();
+    if (!token) {
+      setErrMsg('You must sign in first. Click "Connect Wallet" in the top right and sign the message.');
+      setStep('error');
+      return;
+    }
     try {
-      if (!isConnected) {
-        await connectAsync({ connector: injected() });
-      }
       setStep('deploying');
 
       const data = await api.deployAgent({
@@ -74,6 +76,19 @@ export default function DeployPage() {
       </div>
 
       <div style={{ maxWidth: 640, margin: '0 auto', padding: '48px 32px' }}>
+
+        {/* Not signed in warning */}
+        {(!isConnected || !token) && step === 'form' && (
+          <div style={{ background: 'rgba(249,115,22,.08)', border: '1px solid rgba(249,115,22,.25)', borderRadius: 12, padding: '16px 20px', marginBottom: 28, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 20 }}>🔑</span>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 14, color: '#f97316' }}>Sign in required</div>
+              <div style={{ fontSize: 13, color: '#888', marginTop: 2 }}>
+                Click <strong style={{ color: '#fff' }}>Connect Wallet</strong> in the top right and sign the message to deploy agents.
+              </div>
+            </div>
+          </div>
+        )}
 
         {step === 'form' && (
           <form onSubmit={deploy}>
@@ -148,7 +163,7 @@ export default function DeployPage() {
                 borderRadius: 10, padding: 14, fontSize: 15, fontWeight: 700,
                 cursor: 'pointer', fontFamily: "'Figtree', sans-serif",
               }}>
-                {isConnected ? 'Deploy Agent →' : 'Connect Wallet & Deploy →'}
+                {!token ? 'Sign In to Deploy →' : 'Deploy Agent →'}
               </button>
             </div>
           </form>
