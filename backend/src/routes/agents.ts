@@ -156,8 +156,17 @@ const deploySchema = deployBaseSchema.refine(d => d.endpointUrl || d.code, {
 
 agentsRouter.post('/', authenticate, async (req: Request, res: Response) => {
   try {
-    const body = deploySchema.parse(req.body);
+    const body    = deploySchema.parse(req.body);
     const ownerId = (req as any).userId;
+
+    // Look up the owner's wallet address — payments go directly to them
+    const owner = await prisma.user.findUnique({
+      where:  { id: ownerId },
+      select: { walletAddress: true },
+    });
+    if (!owner) {
+      return res.status(401).json({ error: 'User not found' });
+    }
 
     // Generate unique slug
     let slug = slugify(body.name, { lower: true, strict: true });
@@ -166,10 +175,7 @@ agentsRouter.post('/', authenticate, async (req: Request, res: Response) => {
       slug = `${slug}-${Date.now()}`;
     }
 
-    // Provision OKX TEE Agentic Wallet for this agent
-    const agentWallet = await walletService.createAgentWallet(slug);
-
-    // Create agent in DB
+    // Create agent — walletAddress is the owner's own wallet so earnings arrive directly
     const agent = await prisma.agent.create({
       data: {
         ownerId,
@@ -180,21 +186,20 @@ agentsRouter.post('/', authenticate, async (req: Request, res: Response) => {
         endpointUrl:      body.endpointUrl || null,
         code:             body.code || null,
         pricePerCallUsdc: body.pricePerCallUsdc,
-        walletAddress:    agentWallet.address,
+        walletAddress:    owner.walletAddress,
         tags:             body.tags || [],
         inputSchema:      body.inputSchema as any,
         outputSchema:     body.outputSchema as any,
-        status:           'ACTIVE', // Auto-activate for now
+        status:           'ACTIVE',
       },
     });
 
     res.status(201).json({
       agent,
       wallet: {
-        address:    agentWallet.address,
-        privateKey: agentWallet.privateKey, // Return ONCE — builder must save this
+        address: owner.walletAddress,
       },
-      message: 'Agent deployed. Save your wallet private key — it will not be shown again.',
+      message: 'Agent deployed. Callers pay directly to your connected wallet.',
     });
   } catch (err) {
     if (err instanceof z.ZodError) {

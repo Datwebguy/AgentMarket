@@ -328,28 +328,24 @@ export default function DeployPage() {
                 </p>
               </div>
 
+              {/* Payout wallet */}
               <div className="rounded-xl p-4 sm:p-5 mb-5"
-                style={{ background: 'rgba(239,68,68,.07)', border: '1px solid rgba(239,68,68,.2)' }}>
-                <p className="text-[13px] font-bold mb-3 m-0" style={{ color: '#ef4444' }}>
-                  ⚠️ Save Your Wallet Private Key — Shown Once Only
+                style={{ background: 'rgba(0,212,160,.06)', border: '1px solid rgba(0,212,160,.2)' }}>
+                <p className="text-[13px] font-bold mb-2 m-0" style={{ color: '#00d4a0' }}>
+                  ✅ Earnings go directly to your wallet
                 </p>
-                <p className="rounded-lg px-3 py-2.5 text-[11px] font-mono break-all mb-3 m-0"
-                  style={{ background: '#080808', color: '#ef4444' }}>
-                  {result.wallet.privateKey}
+                <p className="text-[12px] m-0 leading-relaxed" style={{ color: '#666' }}>
+                  Every time someone calls your agent, USDC is transferred on-chain straight to the wallet you connected. No separate key to manage.
                 </p>
-                <button onClick={() => { navigator.clipboard.writeText(result.wallet.privateKey); setKeyCopied(true); }}
-                  className="text-[12px] px-4 py-2 rounded-lg cursor-pointer"
-                  style={{ background: 'rgba(239,68,68,.12)', border: '1px solid rgba(239,68,68,.25)', color: '#ef4444', fontFamily: FONT }}>
-                  {keyCopied ? '✓ Copied' : 'Copy Key'}
-                </button>
               </div>
 
               <div className="rounded-xl p-4 sm:p-5 mb-5 flex flex-col gap-2"
                 style={{ background: '#111', border: '1px solid rgba(255,255,255,.06)' }}>
                 {[
-                  ['Wallet',    result.wallet.address],
-                  ['Price',     `${result.agent.pricePerCallUsdc} USDC / call`],
-                  ['You earn',  `${(parseFloat(result.agent.pricePerCallUsdc) * 0.95).toFixed(5)} USDC / call`],
+                  ['Payout wallet', result.wallet.address],
+                  ['Price',         `${result.agent.pricePerCallUsdc} USDC / call`],
+                  ['You earn',      `${(parseFloat(result.agent.pricePerCallUsdc) * 0.95).toFixed(5)} USDC / call`],
+                  ['Platform fee',  '5%'],
                 ].map(([k, v]) => (
                   <div key={k} className="flex flex-wrap justify-between gap-2 text-[13px]">
                     <span style={{ color: '#555' }}>{k}</span>

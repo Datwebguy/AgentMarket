@@ -98,29 +98,28 @@ callsRouter.post(
         },
       });
 
-      // 5. Settle payment on-chain (non-blocking — agent runs regardless)
-      // Settlement failure is logged but does NOT block the agent call.
-      // This allows the platform to work during bootstrap before the
-      // platform wallet is funded with OKB gas on X Layer.
-      let txHash: string | undefined;
-      let blockNumber: number | undefined;
-
-      x402Service.settlePayment(payment, agent.walletAddress)
-        .then(s => { txHash = s.txHash; blockNumber = s.blockNumber; })
-        .catch(err => console.error('Settlement error (non-fatal):', err?.message));
-
-      // 6. Update call to EXECUTING
+      // 5. Kick off settlement and agent execution in parallel
       await prisma.agentCall.update({
         where: { id: callRecord.id },
         data:  { status: 'EXECUTING' },
       });
 
-      // 7. Execute agent — either run hosted code or forward to external URL
+      // Settlement promise — capped at 12 s so agent response isn't blocked forever
+      const settlementPromise = x402Service.settlePayment(payment, agent.walletAddress)
+        .catch(err => {
+          console.error('Settlement error:', err?.message);
+          return null;
+        });
+
+      const settlementTimeout = new Promise<null>(resolve =>
+        setTimeout(() => resolve(null), 12_000)
+      );
+
+      // 6. Execute agent — either run hosted code or forward to external URL
       let agentResponse: any;
       let agentError: string | undefined;
 
       if (agent.code) {
-        // Platform-hosted: run the builder's code in a sandbox
         try {
           agentResponse = await runAgentCode(agent.code, req.body);
         } catch (err: any) {
@@ -128,7 +127,6 @@ callsRouter.post(
           console.error('Hosted agent runtime error:', agentError);
         }
       } else if (agent.endpointUrl) {
-        // External URL: forward the request
         try {
           const agentRes = await axios.post(agent.endpointUrl, req.body, {
             timeout: 30_000,
@@ -153,17 +151,24 @@ callsRouter.post(
         agentError = 'Agent has no code or endpoint configured';
       }
 
+      // 7. Wait for settlement (up to 12 s — usually already done by now)
+      const settled = await Promise.race([settlementPromise, settlementTimeout]);
+      const txHash    = settled?.txHash    ?? undefined;
+      const blockNumber = settled?.blockNumber ?? undefined;
+
       const responseMs = Date.now() - startMs;
 
-      // 8. Update call record with result
+      // 8. Update call record with result + tx hash
       await prisma.agentCall.update({
         where: { id: callRecord.id },
         data: {
-          status:         agentError ? 'FAILED' : 'COMPLETED',
-          outputPayload:  agentResponse || null,
+          status:        agentError ? 'FAILED' : 'COMPLETED',
+          outputPayload: agentResponse || null,
           responseMs,
-          errorMessage:   agentError || null,
-          settledAt:      agentError ? null : new Date(),
+          errorMessage:  agentError || null,
+          settledAt:     txHash ? new Date() : null,
+          txHash:        txHash ?? null,
+          blockNumber:   blockNumber ? BigInt(blockNumber) : null,
         },
       });
 
