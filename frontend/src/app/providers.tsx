@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiProvider, createConfig, http } from 'wagmi';
+import { mainnet } from 'wagmi/chains';
 import { defineChain } from 'viem';
 import { injected, walletConnect } from 'wagmi/connectors';
 import { useState } from 'react';
@@ -44,7 +45,7 @@ const xLayerTestnet = defineChain({
 });
 
 const wagmiConfig = createConfig({
-  chains:     [xLayer, xLayerTestnet],
+  chains:     [xLayer, xLayerTestnet, mainnet],
   connectors: [
     injected(),
     // Add WalletConnect if you have a project ID:
@@ -53,6 +54,7 @@ const wagmiConfig = createConfig({
   transports: {
     [xLayer.id]:        http(),
     [xLayerTestnet.id]: http(),
+    [mainnet.id]:       http(),
   },
 });
 

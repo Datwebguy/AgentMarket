@@ -1,6 +1,6 @@
 'use client';
 
-import { useAccount, useConnect, useDisconnect, useSignMessage } from 'wagmi';
+import { useAccount, useConnect, useDisconnect, useSignMessage, useSwitchChain } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { SiweMessage } from 'siwe';
 import { useState, useEffect } from 'react';
@@ -10,10 +10,11 @@ import { useAuthStore } from '../hooks/useAuthStore';
 const CHAIN_ID = parseInt(process.env.NEXT_PUBLIC_X_LAYER_CHAIN_ID || '196');
 
 export function Navbar() {
-  const { address, isConnected } = useAccount();
-  const { connectAsync }  = useConnect();
-  const { disconnect }    = useDisconnect();
+  const { address, isConnected, chain } = useAccount();
+  const { connectAsync }    = useConnect();
+  const { disconnect }      = useDisconnect();
   const { signMessageAsync } = useSignMessage();
+  const { switchChainAsync } = useSwitchChain();
   const { token, user, login, logout } = useAuthStore();
 
   const [signing,  setSigning]  = useState(false);
@@ -29,8 +30,13 @@ export function Navbar() {
   async function handleConnect() {
     try {
       setSigning(true);
-      const result = await connectAsync({ connector: injected() });
+      const result = await connectAsync({ connector: injected(), chainId: CHAIN_ID });
       const walletAddress = result.accounts[0];
+
+      // Switch to XLayer if the wallet didn't switch automatically
+      if (result.chainId !== CHAIN_ID) {
+        try { await switchChainAsync({ chainId: CHAIN_ID }); } catch { /* wallet may not support programmatic switch */ }
+      }
 
       // Get nonce from backend
       const nonce = await api.getNonce();
@@ -100,6 +106,21 @@ export function Navbar() {
             </a>
           ))}
         </div>
+
+        {/* Wrong chain — show switch button */}
+        {isConnected && chain?.id !== CHAIN_ID && (
+          <button
+            onClick={() => switchChainAsync({ chainId: CHAIN_ID }).catch(() => {})}
+            style={{
+              background: 'rgba(249,115,22,.15)', color: '#f97316',
+              border: '1px solid rgba(249,115,22,.3)', borderRadius: 999,
+              padding: '6px 14px', fontSize: 12, fontWeight: 700,
+              cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+            }}
+          >
+            Switch to XLayer
+          </button>
+        )}
 
         {/* Right side */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
