@@ -141,8 +141,16 @@ callsRouter.post(
           }
         );
         agentResponse = agentRes.data;
-      } catch (err) {
-        agentError = (err as Error).message;
+      } catch (err: any) {
+        // Capture the real error — could be ECONNREFUSED (agent down), timeout, or HTTP error
+        agentError = err?.response?.data
+          ? JSON.stringify(err.response.data)
+          : err?.code === 'ECONNREFUSED'
+            ? `Agent endpoint unreachable: ${agent.endpointUrl}`
+            : err?.code === 'ETIMEDOUT' || err?.code === 'ECONNABORTED'
+              ? `Agent timed out after 30s: ${agent.endpointUrl}`
+              : err?.message || String(err);
+        console.error('Agent call error:', agentError);
       }
 
       const responseMs = Date.now() - startMs;

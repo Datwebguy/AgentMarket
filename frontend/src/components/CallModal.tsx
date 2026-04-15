@@ -88,7 +88,9 @@ export function CallModal({ agent, onClose }: Props) {
       setStep('done');
       trackEvent('agent_call_success', { agentId: agent.id, priceUsdc: agent.pricePerCallUsdc.toString() });
     } catch (err: any) {
-      setErrMsg(err?.response?.data?.error || err.message || 'Call failed');
+      const detail  = err?.response?.data?.details || err?.response?.data?.detail || '';
+      const message = err?.response?.data?.error   || err?.message || 'Call failed';
+      setErrMsg(detail ? `${message}: ${detail}` : message);
       setStep('error');
       trackEvent('agent_call_error', { agentId: agent.id });
     }
