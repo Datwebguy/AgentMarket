@@ -349,9 +349,9 @@ async function runStartupMigrations() {
 
     const SWAP_QUOTE_CODE = `async function run(input) {
   var chainId   = parseInt(input.chainId || '196');
-  var fromToken = (input.fromToken || input.from || '').toLowerCase().trim();
-  var toToken   = (input.toToken   || input.to   || '').toLowerCase().trim();
-  var amountRaw = input.amount || '1000000';
+  var fromToken  = (input.fromToken || input.from || '').toLowerCase().trim();
+  var toToken    = (input.toToken   || input.to   || '').toLowerCase().trim();
+  var amountHuman = parseFloat(input.amount || '1'); // plain number e.g. 2, 100, 0.5
   var chainNames = { 1:'Ethereum', 137:'Polygon', 196:'XLayer', 42161:'Arbitrum', 8453:'Base', 10:'Optimism', 56:'BSC' };
 
   // Well-known token addresses → OKX symbol + decimals
@@ -405,17 +405,18 @@ async function runStartupMigrations() {
   var fromPrice = await getPrice(fromInfo.symbol);
   var toPrice   = await getPrice(toInfo.symbol);
 
-  var fromAmount = parseFloat(amountRaw) / Math.pow(10, fromInfo.decimals);
-  var fromUsd    = fromAmount * fromPrice;
-  var toAmount   = toPrice > 0 ? fromUsd / toPrice : 0;
-  var rate       = fromAmount > 0 ? toAmount / fromAmount : 0;
+  if (isNaN(amountHuman) || amountHuman <= 0) return { error: 'amount must be a positive number', examples: [1, 10, 200, 0.5] };
+
+  var fromUsd  = amountHuman * fromPrice;
+  var toAmount = toPrice > 0 ? fromUsd / toPrice : 0;
+  var rate     = toAmount / amountHuman;
 
   return {
     network:  chainNames[chainId] || 'Chain ' + chainId, chainId,
-    from: { symbol: fromInfo.symbol, address: fromInfo.address, amount: parseFloat(fromAmount.toFixed(6)), priceUsd: fromPrice, valueUsd: parseFloat(fromUsd.toFixed(4)) },
-    to:   { symbol: toInfo.symbol,   address: toInfo.address,   amount: parseFloat(toAmount.toFixed(6)),   priceUsd: toPrice },
+    from: { symbol: fromInfo.symbol, address: fromInfo.address, amount: amountHuman, priceUsd: fromPrice, valueUsd: parseFloat(fromUsd.toFixed(4)) },
+    to:   { symbol: toInfo.symbol,   address: toInfo.address,   amount: parseFloat(toAmount.toFixed(6)), priceUsd: toPrice },
     rate:    parseFloat(rate.toFixed(6)),
-    summary: fromAmount + ' ' + fromInfo.symbol + ' → ' + toAmount.toFixed(4) + ' ' + toInfo.symbol + ' (1 ' + fromInfo.symbol + ' = ' + rate.toFixed(4) + ' ' + toInfo.symbol + ')',
+    summary: amountHuman + ' ' + fromInfo.symbol + ' → ' + toAmount.toFixed(4) + ' ' + toInfo.symbol + ' (1 ' + fromInfo.symbol + ' = ' + rate.toFixed(4) + ' ' + toInfo.symbol + ')',
     note:    'Indicative rate from OKX spot prices. Actual DEX rate may vary ±0.1–2% due to slippage and fees.',
     source:  'OKX Market Prices', timestamp: new Date().toISOString(),
   };
