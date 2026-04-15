@@ -138,7 +138,7 @@ agentsRouter.get('/:slug', async (req: Request, res: Response) => {
 });
 
 // ─── DEPLOY NEW AGENT ────────────────────────────────────────────────────────
-const deploySchema = z.object({
+const deployBaseSchema = z.object({
   name:             z.string().min(3).max(80),
   description:      z.string().min(20).max(1000),
   category:         z.enum(['DEFI','RISK','TRADING','INTELLIGENCE','PAYMENTS','INFRASTRUCTURE','OTHER']),
@@ -148,7 +148,9 @@ const deploySchema = z.object({
   tags:             z.array(z.string()).max(5).optional(),
   inputSchema:      z.record(z.unknown()).optional(),
   outputSchema:     z.record(z.unknown()).optional(),
-}).refine(d => d.endpointUrl || d.code, {
+});
+
+const deploySchema = deployBaseSchema.refine(d => d.endpointUrl || d.code, {
   message: 'Provide either code (hosted) or an endpointUrl (external)',
 });
 
@@ -204,7 +206,7 @@ agentsRouter.post('/', authenticate, async (req: Request, res: Response) => {
 });
 
 // ─── UPDATE AGENT ────────────────────────────────────────────────────────────
-const updateSchema = deploySchema.partial();
+const updateSchema = deployBaseSchema.partial();
 
 agentsRouter.patch('/:id', authenticate, async (req: Request, res: Response) => {
   try {
