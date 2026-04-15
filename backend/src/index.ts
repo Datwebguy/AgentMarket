@@ -349,37 +349,75 @@ async function runStartupMigrations() {
 
     const SWAP_QUOTE_CODE = `async function run(input) {
   var chainId   = parseInt(input.chainId || '196');
-  var fromToken = input.fromToken || input.from || '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
-  var toToken   = input.toToken   || input.to   || '0x74b7f16337b8972027f6196a17a631ac6de26d22';
-  var amount    = input.amount || '1000000000000000000';
+  var fromToken = (input.fromToken || input.from || '').toLowerCase().trim();
+  var toToken   = (input.toToken   || input.to   || '').toLowerCase().trim();
+  var amountRaw = input.amount || '1000000';
   var chainNames = { 1:'Ethereum', 137:'Polygon', 196:'XLayer', 42161:'Arbitrum', 8453:'Base', 10:'Optimism', 56:'BSC' };
-  var url = 'https://www.okx.com/api/v5/dex/aggregator/quote?chainId=' + chainId + '&fromTokenAddress=' + fromToken + '&toTokenAddress=' + toToken + '&amount=' + amount;
-  var resp = await fetch(url);
-  if (!resp.ok) throw new Error('OKX DEX API error: ' + resp.status);
-  var json = await resp.json();
-  if (json.code !== '0' || !json.data || !json.data[0]) return { error: json.msg || 'Quote failed', hint: 'Check token addresses and chainId. XLayer chainId = 196.' };
-  var q = json.data[0];
-  var fromDec  = parseInt(q.fromToken && q.fromToken.decimal ? q.fromToken.decimal : '18');
-  var toDec    = parseInt(q.toToken   && q.toToken.decimal   ? q.toToken.decimal   : '18');
-  var fromAmt  = parseFloat(amount) / Math.pow(10, fromDec);
-  var toAmt    = parseFloat(q.toTokenAmount) / Math.pow(10, toDec);
-  var fromSym  = q.fromToken ? q.fromToken.tokenSymbol : 'FROM';
-  var toSym    = q.toToken   ? q.toToken.tokenSymbol   : 'TO';
-  var routes = [];
-  if (q.quoteCompareList) {
-    routes = q.quoteCompareList.slice(0, 5).map(function(r) {
-      return { dex: r.dexName, toAmount: parseFloat((parseFloat(r.toTokenAmount) / Math.pow(10, toDec)).toFixed(6)), percent: r.percent };
-    });
+
+  // Well-known token addresses → OKX symbol + decimals
+  var TOKEN_MAP = {
+    // XLayer (196)
+    '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee': { symbol:'OKB',  decimals:18 },
+    '0x74b7f16337b8972027f6196a17a631ac6de26d22': { symbol:'USDC', decimals:6  },
+    '0x1e4a5963abfd975d8c9021ce480b42188849d41d': { symbol:'USDT', decimals:6  },
+    '0x5a77f1443d16ee5761d310e38b62f77f726bc71c': { symbol:'WETH', decimals:18 },
+    // Ethereum (1)
+    '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48': { symbol:'USDC', decimals:6  },
+    '0xdac17f958d2ee523a2206206994597c13d831ec7': { symbol:'USDT', decimals:6  },
+    '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2': { symbol:'WETH', decimals:18 },
+    '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599': { symbol:'WBTC', decimals:8  },
+    '0x6b175474e89094c44da98b954eedeac495271d0f': { symbol:'DAI',  decimals:18 },
+    // Arbitrum (42161)
+    '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8': { symbol:'USDC', decimals:6  },
+    '0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9': { symbol:'USDT', decimals:6  },
+    // Base (8453)
+    '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913': { symbol:'USDC', decimals:6  },
+  };
+
+  // Allow passing symbol names directly as fromToken/toToken
+  var SYMBOL_MAP = { 'okb':'OKB','usdc':'USDC','usdt':'USDT','weth':'WETH','eth':'ETH','wbtc':'WBTC','btc':'BTC','dai':'DAI','sol':'SOL','bnb':'BNB' };
+
+  function resolveToken(addrOrSym) {
+    if (TOKEN_MAP[addrOrSym]) return { address: addrOrSym, ...TOKEN_MAP[addrOrSym] };
+    var sym = SYMBOL_MAP[addrOrSym.toLowerCase()];
+    if (sym) return { address: addrOrSym, symbol: sym, decimals: sym === 'USDC' || sym === 'USDT' ? 6 : 18 };
+    return null;
   }
+
+  var STABLE = ['USDC','USDT','DAI','BUSD','FRAX','LUSD'];
+
+  async function getPrice(symbol) {
+    if (STABLE.indexOf(symbol) !== -1) return 1.0;
+    var sym = symbol === 'WETH' ? 'ETH' : symbol === 'WBTC' ? 'BTC' : symbol;
+    var r = await fetch('https://www.okx.com/api/v5/market/ticker?instId=' + sym + '-USDT');
+    if (!r.ok) throw new Error('OKX price fetch failed for ' + sym + ' (HTTP ' + r.status + ')');
+    var j = await r.json();
+    if (!j.data || !j.data[0] || !j.data[0].last) throw new Error('No price data for ' + sym + '. Try using a token symbol like ETH, BTC, OKB.');
+    return parseFloat(j.data[0].last);
+  }
+
+  var fromInfo = resolveToken(fromToken);
+  var toInfo   = resolveToken(toToken);
+
+  if (!fromInfo) return { error: 'fromToken not recognized: ' + fromToken, hint: 'Use a known contract address or symbol (usdc, usdt, eth, btc, okb, weth, wbtc, dai)' };
+  if (!toInfo)   return { error: 'toToken not recognized: '   + toToken,   hint: 'Use a known contract address or symbol (usdc, usdt, eth, btc, okb, weth, wbtc, dai)' };
+
+  var fromPrice = await getPrice(fromInfo.symbol);
+  var toPrice   = await getPrice(toInfo.symbol);
+
+  var fromAmount = parseFloat(amountRaw) / Math.pow(10, fromInfo.decimals);
+  var fromUsd    = fromAmount * fromPrice;
+  var toAmount   = toPrice > 0 ? fromUsd / toPrice : 0;
+  var rate       = fromAmount > 0 ? toAmount / fromAmount : 0;
+
   return {
-    network: chainNames[chainId] || 'Chain ' + chainId, chainId,
-    from: { address: fromToken, symbol: fromSym, amount: fromAmt },
-    to:   { address: toToken,   symbol: toSym,   amount: parseFloat(toAmt.toFixed(6)) },
-    rate:        parseFloat((toAmt / fromAmt).toFixed(6)),
-    priceImpact: q.priceImpactPercentage || null,
-    bestRoutes:  routes,
-    summary:     fromAmt + ' ' + fromSym + ' → ' + toAmt.toFixed(4) + ' ' + toSym + ' on ' + (chainNames[chainId] || 'Chain ' + chainId) + ' via OKX DEX',
-    source: 'OKX DEX Aggregator', timestamp: new Date().toISOString(),
+    network:  chainNames[chainId] || 'Chain ' + chainId, chainId,
+    from: { symbol: fromInfo.symbol, address: fromInfo.address, amount: parseFloat(fromAmount.toFixed(6)), priceUsd: fromPrice, valueUsd: parseFloat(fromUsd.toFixed(4)) },
+    to:   { symbol: toInfo.symbol,   address: toInfo.address,   amount: parseFloat(toAmount.toFixed(6)),   priceUsd: toPrice },
+    rate:    parseFloat(rate.toFixed(6)),
+    summary: fromAmount + ' ' + fromInfo.symbol + ' → ' + toAmount.toFixed(4) + ' ' + toInfo.symbol + ' (1 ' + fromInfo.symbol + ' = ' + rate.toFixed(4) + ' ' + toInfo.symbol + ')',
+    note:    'Indicative rate from OKX spot prices. Actual DEX rate may vary ±0.1–2% due to slippage and fees.',
+    source:  'OKX Market Prices', timestamp: new Date().toISOString(),
   };
 }`;
 
