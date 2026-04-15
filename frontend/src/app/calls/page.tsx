@@ -42,40 +42,41 @@ function CallRow({ call }: { call: AgentCall }) {
   return (
     <div style={{ borderBottom: '1px solid rgba(255,255,255,.05)' }}>
       {/* Row */}
-      <button onClick={expand}
-        className="w-full text-left px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 cursor-pointer bg-transparent border-none hover:bg-white/[0.02] transition-colors"
-        style={{ fontFamily: FONT }}>
-
+      <button onClick={expand} style={{
+        width: '100%', textAlign: 'left', padding: '14px 20px',
+        display: 'flex', alignItems: 'center', gap: '16px',
+        cursor: 'pointer', background: 'transparent', border: 'none',
+        fontFamily: FONT,
+      }}>
         {/* Agent name + category */}
-        <div className="flex-1 min-w-0">
-          <span className="text-[14px] font-semibold text-white block truncate">
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: '#fff', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {call.agent?.name || 'Unknown Agent'}
           </span>
-          <span className="text-[11px] font-mono" style={{ color: '#555' }}>
+          <span style={{ fontSize: 11, fontFamily: 'monospace', color: '#555' }}>
             {call.agent?.category || ''} · {date.toLocaleDateString()} {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
 
-        {/* Amount */}
-        <div className="flex items-center gap-3 sm:gap-6">
-          <div className="text-right">
-            <span className="text-[14px] font-bold block" style={{ color: '#00d4a0' }}>
+        {/* Amount + status + chevron */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
+          <div style={{ textAlign: 'right' }}>
+            <span style={{ fontSize: 14, fontWeight: 700, color: '#00d4a0', display: 'block' }}>
               {parseFloat(call.amountUsdc).toFixed(4)} USDC
             </span>
             {call.responseMs && (
-              <span className="text-[11px]" style={{ color: '#555' }}>{call.responseMs}ms</span>
+              <span style={{ fontSize: 11, color: '#555' }}>{call.responseMs}ms</span>
             )}
           </div>
 
-          {/* Status badge */}
-          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full flex-shrink-0"
-            style={{ background: s.bg, color: s.color }}>
+          <span style={{
+            fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999,
+            background: s.bg, color: s.color, flexShrink: 0,
+          }}>
             {s.label}
           </span>
 
-          {/* Chevron */}
-          <span className="text-[#444] text-[12px] flex-shrink-0 transition-transform"
-            style={{ transform: open ? 'rotate(180deg)' : 'none' }}>
+          <span style={{ color: '#444', fontSize: 12, flexShrink: 0, transform: open ? 'rotate(180deg)' : 'none', display: 'inline-block' }}>
             ▾
           </span>
         </div>
@@ -83,24 +84,28 @@ function CallRow({ call }: { call: AgentCall }) {
 
       {/* Expanded detail */}
       {open && (
-        <div className="px-4 sm:px-5 pb-5 flex flex-col gap-4"
-          style={{ background: 'rgba(255,255,255,.015)', borderTop: '1px solid rgba(255,255,255,.05)' }}>
-
+        <div style={{
+          padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: '16px',
+          background: 'rgba(255,255,255,.015)', borderTop: '1px solid rgba(255,255,255,.05)',
+        }}>
           {loading && (
-            <p className="text-[13px] py-3" style={{ color: '#555' }}>Loading details...</p>
+            <p style={{ fontSize: 13, paddingTop: 12, color: '#555', margin: 0 }}>Loading details...</p>
           )}
 
           {/* TX Hash */}
           {call.txHash && (
-            <div className="mt-3">
-              <p className="text-[10px] font-mono tracking-widest uppercase mb-2" style={{ color: '#555' }}>Transaction</p>
-              <div className="flex flex-wrap items-center gap-3">
-                <code className="text-[11px] font-mono break-all" style={{ color: '#f97316' }}>
+            <div style={{ marginTop: 12 }}>
+              <p style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '1px', textTransform: 'uppercase', color: '#555', marginBottom: 8, marginTop: 0 }}>Transaction</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
+                <code style={{ fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all', color: '#f97316' }}>
                   {call.txHash}
                 </code>
                 <a href={`${EXPLORER}/tx/${call.txHash}`} target="_blank" rel="noopener noreferrer"
-                  className="text-[12px] font-bold no-underline px-3 py-1.5 rounded-lg flex-shrink-0"
-                  style={{ background: 'rgba(249,115,22,.12)', color: '#f97316', border: '1px solid rgba(249,115,22,.2)' }}>
+                  style={{
+                    fontSize: 12, fontWeight: 700, textDecoration: 'none', padding: '6px 12px',
+                    borderRadius: 8, flexShrink: 0,
+                    background: 'rgba(249,115,22,.12)', color: '#f97316', border: '1px solid rgba(249,115,22,.2)',
+                  }}>
                   Explorer ↗
                 </a>
               </div>
@@ -109,10 +114,9 @@ function CallRow({ call }: { call: AgentCall }) {
 
           {/* Error */}
           {call.status === 'FAILED' && (shown as any)?.errorMessage && (
-            <div className="rounded-xl p-3"
-              style={{ background: 'rgba(239,68,68,.07)', border: '1px solid rgba(239,68,68,.15)' }}>
-              <p className="text-[11px] font-mono tracking-widest uppercase mb-1" style={{ color: '#ef4444' }}>Error</p>
-              <p className="text-[12px] m-0 leading-relaxed" style={{ color: '#aaa' }}>
+            <div style={{ borderRadius: 12, padding: 12, background: 'rgba(239,68,68,.07)', border: '1px solid rgba(239,68,68,.15)' }}>
+              <p style={{ fontSize: 11, fontFamily: 'monospace', letterSpacing: '1px', textTransform: 'uppercase', color: '#ef4444', marginBottom: 4, marginTop: 0 }}>Error</p>
+              <p style={{ fontSize: 12, margin: 0, lineHeight: 1.6, color: '#aaa' }}>
                 {(shown as any).errorMessage}
               </p>
             </div>
@@ -121,9 +125,13 @@ function CallRow({ call }: { call: AgentCall }) {
           {/* Input */}
           {(shown as any)?.inputPayload && (shown as any).inputPayload !== '[redacted]' && (
             <div>
-              <p className="text-[10px] font-mono tracking-widest uppercase mb-2" style={{ color: '#555' }}>Input</p>
-              <pre className="rounded-xl p-3 text-[11px] font-mono overflow-x-auto leading-relaxed"
-                style={{ background: '#080808', border: '1px solid rgba(255,255,255,.07)', color: '#ccc', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              <p style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '1px', textTransform: 'uppercase', color: '#555', marginBottom: 8, marginTop: 0 }}>Input</p>
+              <pre style={{
+                borderRadius: 12, padding: 12, fontSize: 11, fontFamily: 'monospace',
+                overflowX: 'auto', lineHeight: 1.6, margin: 0,
+                background: '#080808', border: '1px solid rgba(255,255,255,.07)', color: '#ccc',
+                whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+              }}>
                 {JSON.stringify((shown as any).inputPayload, null, 2)}
               </pre>
             </div>
@@ -132,24 +140,28 @@ function CallRow({ call }: { call: AgentCall }) {
           {/* Output */}
           {(shown as any)?.outputPayload && (shown as any).outputPayload !== '[redacted]' && (
             <div>
-              <p className="text-[10px] font-mono tracking-widest uppercase mb-2" style={{ color: '#00d4a0' }}>Result</p>
-              <pre className="rounded-xl p-3 text-[11px] font-mono overflow-x-auto leading-relaxed"
-                style={{ background: '#080808', border: '1px solid rgba(0,212,160,.15)', color: '#00d4a0', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              <p style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '1px', textTransform: 'uppercase', color: '#00d4a0', marginBottom: 8, marginTop: 0 }}>Result</p>
+              <pre style={{
+                borderRadius: 12, padding: 12, fontSize: 11, fontFamily: 'monospace',
+                overflowX: 'auto', lineHeight: 1.6, margin: 0,
+                background: '#080808', border: '1px solid rgba(0,212,160,.15)', color: '#00d4a0',
+                whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+              }}>
                 {JSON.stringify((shown as any).outputPayload, null, 2)}
               </pre>
             </div>
           )}
 
           {/* Settlement info */}
-          <div className="flex flex-wrap gap-4">
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
             {[
               ['Agent earned', `${parseFloat(call.agentEarnedUsdc).toFixed(6)} USDC`],
               ['Platform fee', `${parseFloat(call.platformFeeUsdc).toFixed(6)} USDC`],
               ['Response',     call.responseMs ? `${call.responseMs}ms` : '—'],
             ].map(([k, v]) => (
               <div key={k}>
-                <p className="text-[10px] font-mono uppercase tracking-widest mb-0.5" style={{ color: '#444' }}>{k}</p>
-                <p className="text-[12px] font-semibold m-0" style={{ color: '#888' }}>{v}</p>
+                <p style={{ fontSize: 10, fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '1px', color: '#444', marginBottom: 2, marginTop: 0 }}>{k}</p>
+                <p style={{ fontSize: 12, fontWeight: 600, margin: 0, color: '#888' }}>{v}</p>
               </div>
             ))}
           </div>
@@ -173,11 +185,11 @@ export default function CallsPage() {
     return (
       <>
         <Navbar />
-        <main className="min-h-screen flex items-center justify-center" style={{ background: '#080808', fontFamily: FONT }}>
-          <div className="text-center px-6">
-            <div className="text-[40px] mb-4">🔐</div>
-            <h2 className="text-[22px] font-black mb-2">Connect Your Wallet</h2>
-            <p style={{ color: '#555', fontSize: 14 }}>Connect your wallet to see your call history.</p>
+        <main style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#080808', fontFamily: FONT }}>
+          <div style={{ textAlign: 'center', padding: '0 24px' }}>
+            <div style={{ fontSize: 40, marginBottom: 16 }}>🔐</div>
+            <h2 style={{ fontSize: 22, fontWeight: 900, margin: '0 0 8px', color: '#fff' }}>Connect Your Wallet</h2>
+            <p style={{ color: '#555', fontSize: 14, margin: 0 }}>Connect your wallet to see your call history.</p>
           </div>
         </main>
       </>
@@ -187,46 +199,51 @@ export default function CallsPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen" style={{ background: '#080808', color: '#fff', fontFamily: FONT }}>
+      <main style={{ minHeight: '100vh', background: '#080808', color: '#fff', fontFamily: FONT }}>
 
         {/* Header */}
-        <div className="max-w-[900px] mx-auto px-4 sm:px-8 pt-6 sm:pt-10 pb-4 flex flex-wrap items-end justify-between gap-4"
-          style={{ borderBottom: '1px solid rgba(255,255,255,.06)' }}>
+        <div style={{
+          maxWidth: 900, margin: '0 auto', padding: '40px 32px 16px',
+          borderBottom: '1px solid rgba(255,255,255,.06)',
+          display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16,
+        }}>
           <div>
-            <a href="/dashboard" className="text-[13px] no-underline" style={{ color: '#555' }}>← Dashboard</a>
-            <h1 className="text-[22px] sm:text-[28px] font-black tracking-tight mt-2 mb-1">Call History</h1>
-            <p className="text-[13px] m-0" style={{ color: '#555' }}>
+            <a href="/dashboard" style={{ fontSize: 13, textDecoration: 'none', color: '#555' }}>← Dashboard</a>
+            <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-0.5px', margin: '8px 0 4px', color: '#fff' }}>Call History</h1>
+            <p style={{ fontSize: 13, margin: 0, color: '#555' }}>
               {data ? `${data.pagination.total} total calls` : "All calls you've made or received"}
             </p>
           </div>
-          <a href="/marketplace"
-            className="text-[13px] font-bold text-white no-underline rounded-full px-5 py-2.5"
-            style={{ background: '#f97316' }}>
+          <a href="/marketplace" style={{
+            fontSize: 13, fontWeight: 700, color: '#fff', textDecoration: 'none',
+            borderRadius: 999, padding: '10px 20px', background: '#f97316', whiteSpace: 'nowrap',
+          }}>
             + Call an Agent
           </a>
         </div>
 
         {/* Content */}
-        <div className="max-w-[900px] mx-auto px-0 sm:px-8 py-6 pb-20">
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 32px 80px' }}>
 
           {isLoading && (
-            <div className="flex flex-col gap-2 px-4 sm:px-0">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="rounded-xl h-16 animate-pulse" style={{ background: '#101010' }} />
+                <div key={i} style={{ borderRadius: 12, height: 64, background: '#101010' }} />
               ))}
             </div>
           )}
 
           {!isLoading && data?.calls.length === 0 && (
-            <div className="text-center py-24 px-6">
-              <div className="text-[48px] opacity-20 mb-4">📋</div>
-              <h2 className="text-[18px] font-black mb-2">No calls yet</h2>
-              <p className="text-[13px] mb-6" style={{ color: '#555' }}>
+            <div style={{ textAlign: 'center', padding: '96px 24px' }}>
+              <div style={{ fontSize: 48, opacity: 0.2, marginBottom: 16 }}>📋</div>
+              <h2 style={{ fontSize: 18, fontWeight: 900, margin: '0 0 8px', color: '#fff' }}>No calls yet</h2>
+              <p style={{ fontSize: 13, marginBottom: 24, color: '#555' }}>
                 Your call history will appear here after you call an agent.
               </p>
-              <a href="/marketplace"
-                className="text-[14px] font-bold text-white no-underline rounded-full px-7 py-3 inline-block"
-                style={{ background: '#f97316' }}>
+              <a href="/marketplace" style={{
+                fontSize: 14, fontWeight: 700, color: '#fff', textDecoration: 'none',
+                borderRadius: 999, padding: '12px 28px', background: '#f97316', display: 'inline-block',
+              }}>
                 Browse Agents
               </a>
             </div>
@@ -234,8 +251,7 @@ export default function CallsPage() {
 
           {!isLoading && data && data.calls.length > 0 && (
             <>
-              <div className="sm:rounded-2xl overflow-hidden"
-                style={{ border: '1px solid rgba(255,255,255,.07)', background: '#101010' }}>
+              <div style={{ border: '1px solid rgba(255,255,255,.07)', background: '#101010', borderRadius: 16, overflow: 'hidden' }}>
                 {data.calls.map(call => (
                   <CallRow key={call.id} call={call} />
                 ))}
@@ -243,18 +259,25 @@ export default function CallsPage() {
 
               {/* Pagination */}
               {data.pagination.totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-8 flex-wrap px-4">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 32, flexWrap: 'wrap' }}>
                   <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                    className="text-[13px] font-semibold px-5 py-2 rounded-full cursor-pointer disabled:opacity-30"
-                    style={{ background: 'transparent', color: '#888', border: '1px solid rgba(255,255,255,.1)', fontFamily: FONT }}>
+                    style={{
+                      fontSize: 13, fontWeight: 600, padding: '8px 20px', borderRadius: 999,
+                      cursor: page === 1 ? 'not-allowed' : 'pointer', opacity: page === 1 ? 0.3 : 1,
+                      background: 'transparent', color: '#888', border: '1px solid rgba(255,255,255,.1)', fontFamily: FONT,
+                    }}>
                     ← Prev
                   </button>
-                  <span className="text-[13px]" style={{ color: '#555' }}>
+                  <span style={{ fontSize: 13, color: '#555' }}>
                     Page {page} of {data.pagination.totalPages}
                   </span>
                   <button onClick={() => setPage(p => Math.min(data.pagination.totalPages, p + 1))} disabled={page === data.pagination.totalPages}
-                    className="text-[13px] font-semibold px-5 py-2 rounded-full cursor-pointer disabled:opacity-30"
-                    style={{ background: 'transparent', color: '#888', border: '1px solid rgba(255,255,255,.1)', fontFamily: FONT }}>
+                    style={{
+                      fontSize: 13, fontWeight: 600, padding: '8px 20px', borderRadius: 999,
+                      cursor: page === data.pagination.totalPages ? 'not-allowed' : 'pointer',
+                      opacity: page === data.pagination.totalPages ? 0.3 : 1,
+                      background: 'transparent', color: '#888', border: '1px solid rgba(255,255,255,.1)', fontFamily: FONT,
+                    }}>
                     Next →
                   </button>
                 </div>
@@ -263,6 +286,13 @@ export default function CallsPage() {
           )}
         </div>
       </main>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .calls-header { padding: 24px 16px 16px !important; }
+          .calls-content { padding: 16px 0 60px !important; }
+        }
+      `}</style>
     </>
   );
 }

@@ -118,7 +118,6 @@ export default function DeployPage() {
   const [step,      setStep]      = useState<'form' | 'deploying' | 'done' | 'error'>('form');
   const [result,    setResult]    = useState<any>(null);
   const [errMsg,    setErrMsg]    = useState('');
-  const [keyCopied, setKeyCopied] = useState(false);
 
   function applyTemplate(key: string) {
     const t = TEMPLATES[key];
@@ -150,15 +149,15 @@ export default function DeployPage() {
     }
   }
 
-  const inp = {
+  const inp: React.CSSProperties = {
     width: '100%', background: '#0d0d0d',
     border: '1px solid rgba(255,255,255,.1)', borderRadius: 10,
     padding: '11px 14px', color: '#fff',
-    fontFamily: FONT, fontSize: 14, outline: 'none', boxSizing: 'border-box' as const,
+    fontFamily: FONT, fontSize: 14, outline: 'none', boxSizing: 'border-box',
   };
-  const lbl = {
+  const lbl: React.CSSProperties = {
     display: 'block', fontSize: 11, fontFamily: 'monospace',
-    letterSpacing: '1px', color: '#555', textTransform: 'uppercase' as const, marginBottom: 6,
+    letterSpacing: '1px', color: '#555', textTransform: 'uppercase', marginBottom: 6,
   };
 
   const earnings = (parseFloat(form.pricePerCallUsdc || '0') * 0.95).toFixed(5);
@@ -169,23 +168,27 @@ export default function DeployPage() {
       <main style={{ minHeight: '100vh', background: '#080808', color: '#fff', fontFamily: FONT }}>
 
         {/* Header */}
-        <div className="px-4 sm:px-8 py-5 sm:py-6"
-          style={{ borderBottom: '1px solid rgba(255,255,255,.06)' }}>
-          <a href="/marketplace" style={{ fontSize: 13, color: '#666', textDecoration: 'none' }}>← Marketplace</a>
-          <h1 className="text-[22px] sm:text-[28px] font-black tracking-tight mt-2 mb-1">Deploy an Agent</h1>
-          <p style={{ fontSize: 14, color: '#555', margin: 0 }}>
-            Write your code below and deploy in seconds. No server needed.
-          </p>
+        <div style={{ padding: '24px 32px 20px', borderBottom: '1px solid rgba(255,255,255,.06)' }}>
+          <div style={{ maxWidth: 780, margin: '0 auto' }}>
+            <a href="/marketplace" style={{ fontSize: 13, color: '#666', textDecoration: 'none' }}>← Marketplace</a>
+            <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-0.5px', margin: '8px 0 4px', color: '#fff' }}>Deploy an Agent</h1>
+            <p style={{ fontSize: 14, color: '#555', margin: 0 }}>
+              Write your code below and deploy in seconds. No server needed.
+            </p>
+          </div>
         </div>
 
-        <div className="max-w-[780px] mx-auto px-4 sm:px-8 py-6 sm:py-10">
+        <div style={{ maxWidth: 780, margin: '0 auto', padding: '32px 32px 60px' }}>
 
           {/* Auth warning */}
           {(!isConnected || !token) && step === 'form' && (
-            <div className="rounded-xl p-4 mb-6 flex items-center gap-3"
-              style={{ background: 'rgba(249,115,22,.08)', border: '1px solid rgba(249,115,22,.25)' }}>
-              <span className="text-[18px] flex-shrink-0">🔑</span>
-              <p className="text-[13px] m-0" style={{ color: '#888' }}>
+            <div style={{
+              borderRadius: 12, padding: '14px 16px', marginBottom: 24,
+              display: 'flex', alignItems: 'center', gap: 12,
+              background: 'rgba(249,115,22,.08)', border: '1px solid rgba(249,115,22,.25)',
+            }}>
+              <span style={{ fontSize: 18, flexShrink: 0 }}>🔑</span>
+              <p style={{ fontSize: 13, margin: 0, color: '#888' }}>
                 <strong style={{ color: '#f97316' }}>Sign in required.</strong>{' '}
                 Click <strong style={{ color: '#fff' }}>Connect Wallet</strong> in the top right first.
               </p>
@@ -194,15 +197,17 @@ export default function DeployPage() {
 
           {/* ── FORM ── */}
           {step === 'form' && (
-            <form onSubmit={deploy} className="flex flex-col gap-5">
+            <form onSubmit={deploy} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
               {/* Mode toggle */}
-              <div className="flex rounded-xl p-1 gap-1"
-                style={{ background: '#111', border: '1px solid rgba(255,255,255,.08)' }}>
+              <div style={{ display: 'flex', borderRadius: 12, padding: 4, gap: 4, background: '#111', border: '1px solid rgba(255,255,255,.08)' }}>
                 {(['code', 'url'] as const).map(m => (
-                  <button key={m} type="button" onClick={() => setMode(m)}
-                    className="flex-1 py-2.5 rounded-lg text-[13px] font-bold cursor-pointer border-none transition-all"
-                    style={{ background: mode === m ? '#f97316' : 'transparent', color: mode === m ? '#fff' : '#555', fontFamily: FONT }}>
+                  <button key={m} type="button" onClick={() => setMode(m)} style={{
+                    flex: 1, padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+                    cursor: 'pointer', border: 'none',
+                    background: mode === m ? '#f97316' : 'transparent',
+                    color: mode === m ? '#fff' : '#555', fontFamily: FONT,
+                  }}>
                     {m === 'code' ? '⚡ Write Code (Hosted)' : '🔗 External URL'}
                   </button>
                 ))}
@@ -212,16 +217,16 @@ export default function DeployPage() {
               {mode === 'code' && (
                 <div>
                   <label style={lbl}>Start from a template</label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }} className="template-grid">
                     {Object.entries(TEMPLATES).map(([key]) => (
-                      <button key={key} type="button" onClick={() => applyTemplate(key)}
-                        className="py-3 px-2 rounded-xl text-[12px] font-semibold cursor-pointer text-center transition-all"
-                        style={{
-                          border: `1px solid ${template === key ? '#f97316' : 'rgba(255,255,255,.08)'}`,
-                          background: template === key ? 'rgba(249,115,22,.1)' : '#111',
-                          color: template === key ? '#f97316' : '#888',
-                          fontFamily: FONT,
-                        }}>
+                      <button key={key} type="button" onClick={() => applyTemplate(key)} style={{
+                        padding: '12px 8px', borderRadius: 12, fontSize: 12, fontWeight: 600,
+                        cursor: 'pointer', textAlign: 'center',
+                        border: `1px solid ${template === key ? '#f97316' : 'rgba(255,255,255,.08)'}`,
+                        background: template === key ? 'rgba(249,115,22,.1)' : '#111',
+                        color: template === key ? '#f97316' : '#888',
+                        fontFamily: FONT,
+                      }}>
                         {key === 'crypto' ? '₿ Crypto' : key === 'sentiment' ? '💬 Sentiment' : key === 'converter' ? '📐 Converter' : '✨ Blank'}
                       </button>
                     ))}
@@ -230,7 +235,7 @@ export default function DeployPage() {
               )}
 
               {/* Name + Category */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }} className="two-col-grid">
                 <div>
                   <label style={lbl}>Agent Name *</label>
                   <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
@@ -257,7 +262,7 @@ export default function DeployPage() {
               {mode === 'code' ? (
                 <div>
                   <label style={lbl}>Agent Code *</label>
-                  <p className="text-[12px] mb-2 mt-0" style={{ color: '#444' }}>
+                  <p style={{ fontSize: 12, marginBottom: 8, marginTop: 0, color: '#444' }}>
                     Define <code style={{ color: '#f97316' }}>async function run(input)</code> — return any JSON.
                     You have access to <code style={{ color: '#00d4a0' }}>fetch</code> for external APIs.
                   </p>
@@ -270,14 +275,14 @@ export default function DeployPage() {
                   <label style={lbl}>Endpoint URL *</label>
                   <input value={form.endpointUrl} onChange={e => setForm(f => ({ ...f, endpointUrl: e.target.value }))}
                     required={mode === 'url'} type="url" placeholder="https://your-agent.example.com/run" style={inp} />
-                  <p className="text-[12px] mt-2 mb-0" style={{ color: '#444' }}>
+                  <p style={{ fontSize: 12, marginTop: 8, marginBottom: 0, color: '#444' }}>
                     Must accept POST with a JSON body and return JSON.
                   </p>
                 </div>
               )}
 
               {/* Price + Tags */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }} className="two-col-grid">
                 <div>
                   <label style={lbl}>Price Per Call (USDC) *</label>
                   <input type="number" step="0.0001" min="0.0001" max="100"
@@ -293,16 +298,20 @@ export default function DeployPage() {
               </div>
 
               {/* Earnings strip */}
-              <div className="rounded-xl px-4 py-3 flex flex-wrap justify-between items-center gap-3"
-                style={{ background: '#111', border: '1px solid rgba(255,255,255,.06)' }}>
-                <span className="text-[13px]" style={{ color: '#666' }}>You earn per call</span>
-                <span className="text-[18px] font-black" style={{ color: '#00d4a0' }}>{earnings} USDC</span>
-                <span className="text-[12px]" style={{ color: '#444' }}>Platform takes 5%</span>
+              <div style={{
+                borderRadius: 12, padding: '12px 16px',
+                display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 12,
+                background: '#111', border: '1px solid rgba(255,255,255,.06)',
+              }}>
+                <span style={{ fontSize: 13, color: '#666' }}>You earn per call</span>
+                <span style={{ fontSize: 18, fontWeight: 900, color: '#00d4a0' }}>{earnings} USDC</span>
+                <span style={{ fontSize: 12, color: '#444' }}>Platform takes 5%</span>
               </div>
 
-              <button type="submit"
-                className="w-full py-4 rounded-xl text-[15px] font-bold text-white cursor-pointer border-none"
-                style={{ background: '#f97316', fontFamily: FONT }}>
+              <button type="submit" style={{
+                width: '100%', padding: '16px', borderRadius: 12, fontSize: 15, fontWeight: 700,
+                color: '#fff', cursor: 'pointer', border: 'none', background: '#f97316', fontFamily: FONT,
+              }}>
                 {!token ? 'Sign In to Deploy →' : '🚀 Deploy Agent'}
               </button>
             </form>
@@ -310,53 +319,60 @@ export default function DeployPage() {
 
           {/* ── DEPLOYING ── */}
           {step === 'deploying' && (
-            <div className="text-center py-20">
-              <div className="text-[40px] mb-4">⚙️</div>
-              <h2 className="text-[18px] font-bold mb-2">Deploying your agent...</h2>
-              <p style={{ color: '#555', fontSize: 14 }}>Provisioning wallet and going live on the marketplace</p>
+            <div style={{ textAlign: 'center', padding: '80px 24px' }}>
+              <div style={{ fontSize: 40, marginBottom: 16 }}>⚙️</div>
+              <h2 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 8px', color: '#fff' }}>Deploying your agent...</h2>
+              <p style={{ color: '#555', fontSize: 14, margin: 0 }}>Provisioning wallet and going live on the marketplace</p>
             </div>
           )}
 
           {/* ── DONE ── */}
           {step === 'done' && result && (
             <div>
-              <div className="text-center mb-8">
-                <div className="text-[48px] mb-3">✅</div>
-                <h2 className="text-[24px] font-black tracking-tight mb-2">Agent Live</h2>
-                <p style={{ fontSize: 14, color: '#555' }}>
+              <div style={{ textAlign: 'center', marginBottom: 32 }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
+                <h2 style={{ fontSize: 24, fontWeight: 900, letterSpacing: '-0.5px', margin: '0 0 8px', color: '#fff' }}>Agent Live</h2>
+                <p style={{ fontSize: 14, color: '#555', margin: 0 }}>
                   <strong style={{ color: '#fff' }}>{result.agent.name}</strong> is now earning on AgentMarket.
                 </p>
               </div>
 
               {/* Payout wallet */}
-              <div className="rounded-xl p-4 sm:p-5 mb-5"
-                style={{ background: 'rgba(0,212,160,.06)', border: '1px solid rgba(0,212,160,.2)' }}>
-                <p className="text-[13px] font-bold mb-2 m-0" style={{ color: '#00d4a0' }}>
+              <div style={{
+                borderRadius: 12, padding: '16px 20px', marginBottom: 20,
+                background: 'rgba(0,212,160,.06)', border: '1px solid rgba(0,212,160,.2)',
+              }}>
+                <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 8, marginTop: 0, color: '#00d4a0' }}>
                   ✅ Earnings go directly to your wallet
                 </p>
-                <p className="text-[12px] m-0 leading-relaxed" style={{ color: '#666' }}>
+                <p style={{ fontSize: 12, margin: 0, lineHeight: 1.6, color: '#666' }}>
                   Every time someone calls your agent, USDC is transferred on-chain straight to the wallet you connected. No separate key to manage.
                 </p>
               </div>
 
-              <div className="rounded-xl p-4 sm:p-5 mb-5 flex flex-col gap-2"
-                style={{ background: '#111', border: '1px solid rgba(255,255,255,.06)' }}>
+              <div style={{
+                borderRadius: 12, padding: '16px 20px', marginBottom: 20,
+                display: 'flex', flexDirection: 'column', gap: 8,
+                background: '#111', border: '1px solid rgba(255,255,255,.06)',
+              }}>
                 {[
                   ['Payout wallet', result.wallet.address],
                   ['Price',         `${result.agent.pricePerCallUsdc} USDC / call`],
                   ['You earn',      `${(parseFloat(result.agent.pricePerCallUsdc) * 0.95).toFixed(5)} USDC / call`],
                   ['Platform fee',  '5%'],
                 ].map(([k, v]) => (
-                  <div key={k} className="flex flex-wrap justify-between gap-2 text-[13px]">
+                  <div key={k} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 8, fontSize: 13 }}>
                     <span style={{ color: '#555' }}>{k}</span>
-                    <span className="font-mono text-[11px] break-all text-right" style={{ color: '#ccc' }}>{v}</span>
+                    <span style={{ fontFamily: 'monospace', fontSize: 11, wordBreak: 'break-all', textAlign: 'right', color: '#ccc' }}>{v}</span>
                   </div>
                 ))}
               </div>
 
-              <a href="/marketplace"
-                className="block text-center text-[14px] font-bold text-white no-underline rounded-xl py-4"
-                style={{ background: '#f97316' }}>
+              <a href="/marketplace" style={{
+                display: 'block', textAlign: 'center', fontSize: 14, fontWeight: 700,
+                color: '#fff', textDecoration: 'none', borderRadius: 12, padding: '16px',
+                background: '#f97316',
+              }}>
                 View on Marketplace →
               </a>
             </div>
@@ -365,20 +381,31 @@ export default function DeployPage() {
           {/* ── ERROR ── */}
           {step === 'error' && (
             <div>
-              <div className="rounded-xl p-4 sm:p-5 mb-4"
-                style={{ background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)' }}>
-                <p className="font-bold text-[14px] mb-2 m-0" style={{ color: '#ef4444' }}>Deployment Failed</p>
-                <p className="text-[13px] leading-relaxed m-0" style={{ color: '#888' }}>{errMsg}</p>
+              <div style={{
+                borderRadius: 12, padding: '16px 20px', marginBottom: 16,
+                background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)',
+              }}>
+                <p style={{ fontWeight: 700, fontSize: 14, marginBottom: 8, marginTop: 0, color: '#ef4444' }}>Deployment Failed</p>
+                <p style={{ fontSize: 13, lineHeight: 1.6, margin: 0, color: '#888' }}>{errMsg}</p>
               </div>
-              <button onClick={() => { setStep('form'); setErrMsg(''); }}
-                className="w-full py-3 rounded-xl text-[13px] font-semibold cursor-pointer"
-                style={{ background: 'transparent', color: '#666', border: '1px solid rgba(255,255,255,.1)', fontFamily: FONT }}>
+              <button onClick={() => { setStep('form'); setErrMsg(''); }} style={{
+                width: '100%', padding: '12px', borderRadius: 12, fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', background: 'transparent', color: '#666',
+                border: '1px solid rgba(255,255,255,.1)', fontFamily: FONT,
+              }}>
                 Try Again
               </button>
             </div>
           )}
         </div>
       </main>
+
+      <style>{`
+        @media (max-width: 640px) {
+          .two-col-grid { grid-template-columns: 1fr !important; }
+          .template-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
+      `}</style>
     </>
   );
 }

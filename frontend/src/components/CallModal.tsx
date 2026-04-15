@@ -7,11 +7,7 @@ import { Agent, api, X402CallResult } from '../lib/api';
 import { useX402Payment } from '../hooks/useX402Payment';
 import { trackEvent } from '../lib/analytics';
 
-interface Props {
-  agent:   Agent;
-  onClose: () => void;
-}
-
+interface Props { agent: Agent; onClose: () => void; }
 type Step = 'input' | 'connecting' | 'signing' | 'settling' | 'done' | 'error';
 
 const FONT     = "'Figtree', sans-serif";
@@ -33,9 +29,9 @@ export function CallModal({ agent, onClose }: Props) {
   const fee        = (parseFloat(priceUsdc) * 0.05).toFixed(6);
 
   const steps = [
-    { label: 'Payment Authorized', sub: 'EIP-3009 signature',          done: ['settling','done'].includes(step), active: step === 'signing'  },
-    { label: 'Settled on X Layer', sub: 'USDC transfer on-chain',       done: step === 'done',                    active: step === 'settling' },
-    { label: 'Agent Responded',    sub: 'Result received and verified', done: step === 'done',                    active: step === 'settling' },
+    { label: 'Payment Authorized', sub: 'EIP-3009 signature',           done: ['settling','done'].includes(step), active: step === 'signing'  },
+    { label: 'Settled on X Layer', sub: 'USDC transfer on-chain',        done: step === 'done',                    active: step === 'settling' },
+    { label: 'Agent Responded',    sub: 'Result received and verified',  done: step === 'done',                    active: step === 'settling' },
   ];
 
   async function execute() {
@@ -47,12 +43,10 @@ export function CallModal({ agent, onClose }: Props) {
       }
       setStep('signing');
       const paymentHeader = await buildPaymentHeader(agent.walletAddress, agent.pricePerCallUsdc.toString());
-
       setStep('settling');
       let payload: Record<string, unknown>;
       try { payload = JSON.parse(input); }
       catch { payload = { input: input.trim() }; }
-
       const callResult = await api.executeCall(agent.id, payload, paymentHeader);
       setTxHash(callResult.txHash || '');
       setResult(callResult);
@@ -69,56 +63,81 @@ export function CallModal({ agent, onClose }: Props) {
 
   return (
     <>
-      {/* Backdrop */}
-      <div onClick={onClose}
-        className="fixed inset-0 z-[999] flex items-end sm:items-center justify-center sm:p-5"
-        style={{ background: 'rgba(0,0,0,.85)' }}>
+      {/* ── FIXED BACKDROP ──────────────────────────────────── */}
+      <div onClick={onClose} style={{
+        position:        'fixed',
+        inset:           0,
+        top:             0, left: 0, right: 0, bottom: 0,
+        zIndex:          999,
+        background:      'rgba(0,0,0,0.85)',
+        display:         'flex',
+        alignItems:      'flex-end',
+        justifyContent:  'center',
+        padding:         '0',
+        fontFamily:      FONT,
+      }}>
 
-        {/* Sheet / Modal */}
-        <div onClick={e => e.stopPropagation()}
-          className="w-full sm:w-[460px] sm:max-w-full rounded-t-[24px] sm:rounded-[20px] overflow-y-auto"
-          style={{
-            background: '#101010',
-            border: '1px solid rgba(249,115,22,.3)',
-            maxHeight: '92vh',
-            fontFamily: FONT,
-          }}>
+        {/* ── MODAL SHEET ─────────────────────────────────── */}
+        <div onClick={e => e.stopPropagation()} style={{
+          width:        '100%',
+          maxWidth:     '480px',
+          maxHeight:    '92vh',
+          overflowY:    'auto',
+          background:   '#101010',
+          border:       '1px solid rgba(249,115,22,0.3)',
+          borderRadius: '24px 24px 0 0',
+          fontFamily:   FONT,
+        }}>
 
-          {/* Drag handle — mobile only */}
-          <div className="flex justify-center pt-3 pb-1 sm:hidden">
-            <div className="w-10 h-1 rounded-full bg-white/20" />
+          {/* Drag handle */}
+          <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '12px', paddingBottom: '4px' }}>
+            <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.15)' }} />
           </div>
 
-          {/* Inner padding */}
-          <div className="px-5 sm:px-7 pt-4 sm:pt-6 pb-6">
+          {/* Content */}
+          <div style={{ padding: '16px 24px 28px' }}>
 
-            {/* Close + title */}
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1 pr-4">
-                <h2 className="text-[18px] font-black tracking-tight m-0">{agent.name}</h2>
-                <p className="text-[12px] leading-relaxed mt-1 m-0" style={{ color: '#666' }}>{agent.description}</p>
+            {/* Title + close */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div style={{ flex: 1, paddingRight: '12px' }}>
+                <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 900, letterSpacing: '-0.3px', color: '#fff' }}>
+                  {agent.name}
+                </h2>
+                <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#666', lineHeight: 1.5 }}>
+                  {agent.description}
+                </p>
               </div>
-              <button onClick={onClose}
-                className="text-[#555] text-[18px] bg-transparent border-none cursor-pointer leading-none p-0 flex-shrink-0 mt-0.5">
-                ✕
-              </button>
+              <button onClick={onClose} style={{
+                background: 'transparent', border: 'none', color: '#555',
+                fontSize: '18px', cursor: 'pointer', lineHeight: 1, padding: 0, flexShrink: 0,
+              }}>✕</button>
             </div>
 
-            {/* ── INPUT STEP ──────────────────── */}
+            {/* ── INPUT STEP ──────────────────────────────── */}
             {step === 'input' && (
               <>
-                <label className="block text-[10px] font-mono tracking-widest uppercase mb-2" style={{ color: '#555' }}>
+                <div style={{ fontSize: '10px', fontFamily: 'monospace', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#555', marginBottom: '8px' }}>
                   Input Payload
-                </label>
-                <textarea value={input} onChange={e => setInput(e.target.value)}
+                </div>
+                <textarea
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
                   placeholder={agent.inputSchema ? JSON.stringify(agent.inputSchema, null, 2) : '{"input": "your data here"}'}
                   rows={5}
-                  className="w-full rounded-xl p-3 text-[12px] font-mono resize-y outline-none text-white"
-                  style={{ background: '#080808', border: '1px solid rgba(255,255,255,.1)', boxSizing: 'border-box' }} />
+                  style={{
+                    width: '100%', boxSizing: 'border-box', padding: '12px',
+                    background: '#080808', border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px', color: '#fff', fontSize: '12px',
+                    fontFamily: 'monospace', resize: 'vertical', outline: 'none',
+                  }}
+                />
 
                 {/* Payment summary */}
-                <div className="rounded-xl p-3 my-4 flex flex-col gap-1.5"
-                  style={{ background: '#080808', border: '1px solid rgba(255,255,255,.06)' }}>
+                <div style={{
+                  background: '#080808', border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: '12px', padding: '12px', margin: '12px 0',
+                  display: 'flex', flexDirection: 'column', gap: '8px',
+                }}>
                   {[
                     ['Payment',        'x402 · USDC'],
                     ['Network',        'X Layer Mainnet'],
@@ -126,88 +145,104 @@ export function CallModal({ agent, onClose }: Props) {
                     ['Platform fee',   `${fee} USDC (5%)`],
                     ['Agent receives', `${agentEarns} USDC`],
                   ].map(([k, v]) => (
-                    <div key={k} className="flex justify-between text-[12px] gap-3">
+                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', fontSize: '12px' }}>
                       <span style={{ color: '#666' }}>{k}</span>
-                      <span className="text-right" style={{ color: k === 'You pay' ? '#00d4a0' : '#999', fontWeight: k === 'You pay' ? 700 : 400 }}>{v}</span>
+                      <span style={{ color: k === 'You pay' ? '#00d4a0' : '#999', fontWeight: k === 'You pay' ? 700 : 400, textAlign: 'right' }}>{v}</span>
                     </div>
                   ))}
                 </div>
 
                 {isConnected
-                  ? <p className="text-[11px] text-center font-mono mb-3" style={{ color: '#444' }}>
-                      From: {address?.slice(0, 6)}...{address?.slice(-4)}
+                  ? <p style={{ fontSize: '11px', textAlign: 'center', fontFamily: 'monospace', color: '#444', margin: '0 0 12px' }}>
+                      From: {address?.slice(0,6)}…{address?.slice(-4)}
                     </p>
-                  : <p className="text-[12px] text-center mb-3" style={{ color: '#555' }}>
+                  : <p style={{ fontSize: '12px', textAlign: 'center', color: '#555', margin: '0 0 12px' }}>
                       You'll be asked to connect your wallet.
                     </p>
                 }
 
-                <button onClick={execute} disabled={!input.trim()}
-                  className="w-full py-3.5 rounded-xl text-[15px] font-bold text-white cursor-pointer disabled:opacity-40"
-                  style={{ background: '#f97316', border: 'none', fontFamily: FONT }}>
+                <button onClick={execute} disabled={!input.trim()} style={{
+                  width: '100%', padding: '14px', borderRadius: '12px',
+                  background: '#f97316', border: 'none', color: '#fff',
+                  fontSize: '15px', fontWeight: 700, cursor: 'pointer',
+                  opacity: !input.trim() ? 0.4 : 1, fontFamily: FONT,
+                }}>
                   {isConnected ? `Authorize & Call — ${priceUsdc} USDC` : 'Connect Wallet & Call'}
                 </button>
               </>
             )}
 
-            {/* ── PROGRESS STEPS ──────────────── */}
+            {/* ── PROGRESS ────────────────────────────────── */}
             {['connecting','signing','settling','done'].includes(step) && (
               <>
                 {step === 'connecting' && (
-                  <p className="text-center text-[13px] mb-4" style={{ color: '#666' }}>Opening wallet connection...</p>
+                  <p style={{ textAlign: 'center', fontSize: '13px', color: '#666', marginBottom: '16px' }}>
+                    Opening wallet connection…
+                  </p>
                 )}
 
-                <div className="flex flex-col mb-4">
+                <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '16px' }}>
                   {steps.map((s, i) => (
-                    <div key={i} className="flex items-center gap-3 py-3"
-                      style={{ borderBottom: '1px solid rgba(255,255,255,.05)' }}>
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0"
-                        style={{
-                          background: s.done ? '#00d4a0' : 'transparent',
-                          border: `2px solid ${s.done ? '#00d4a0' : s.active ? '#f97316' : 'rgba(255,255,255,.1)'}`,
-                          color: s.done ? '#000' : s.active ? '#f97316' : 'rgba(255,255,255,.2)',
-                          animation: s.active && !s.done ? 'pulse 1.2s ease-in-out infinite' : 'none',
-                        }}>
+                    <div key={i} style={{
+                      display: 'flex', alignItems: 'center', gap: '12px',
+                      padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.05)',
+                    }}>
+                      <div style={{
+                        width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '12px', fontWeight: 700,
+                        background: s.done ? '#00d4a0' : 'transparent',
+                        border: `2px solid ${s.done ? '#00d4a0' : s.active ? '#f97316' : 'rgba(255,255,255,0.1)'}`,
+                        color: s.done ? '#000' : s.active ? '#f97316' : 'rgba(255,255,255,0.2)',
+                      }}>
                         {s.done ? '✓' : i + 1}
                       </div>
                       <div>
-                        <div className="text-[13px]" style={{ fontWeight: s.done || s.active ? 600 : 400, color: s.done || s.active ? '#fff' : '#555' }}>
+                        <div style={{ fontSize: '13px', fontWeight: s.done || s.active ? 600 : 400, color: s.done || s.active ? '#fff' : '#555' }}>
                           {s.label}
                         </div>
-                        <div className="text-[11px]" style={{ color: '#444' }}>{s.sub}</div>
+                        <div style={{ fontSize: '11px', color: '#444' }}>{s.sub}</div>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Result */}
                 {step === 'done' && result && (
                   <>
-                    <div className="text-[10px] font-mono tracking-widest uppercase mb-2" style={{ color: '#00d4a0' }}>
+                    <div style={{ fontSize: '10px', fontFamily: 'monospace', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#00d4a0', marginBottom: '8px' }}>
                       Agent Response · x402 Settled
                     </div>
-                    <pre className="rounded-xl p-3 text-[11px] overflow-x-auto font-mono leading-relaxed"
-                      style={{ background: '#080808', border: '1px solid rgba(0,212,160,.18)', color: '#00d4a0', maxHeight: 200, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                    <pre style={{
+                      background: '#080808', border: '1px solid rgba(0,212,160,0.18)',
+                      borderRadius: '12px', padding: '12px', fontSize: '11px',
+                      color: '#00d4a0', maxHeight: '200px', overflowX: 'auto',
+                      whiteSpace: 'pre-wrap', wordBreak: 'break-word', margin: 0,
+                    }}>
                       {JSON.stringify(result.result, null, 2)}
                     </pre>
 
-                    {/* TX Hash box */}
-                    <div className="rounded-xl p-4 mt-4"
-                      style={{ background: 'rgba(0,212,160,.05)', border: '1px solid rgba(0,212,160,.15)' }}>
-                      <div className="text-[10px] font-mono tracking-widest uppercase mb-2" style={{ color: '#00d4a0' }}>
+                    <div style={{
+                      background: 'rgba(0,212,160,0.05)', border: '1px solid rgba(0,212,160,0.15)',
+                      borderRadius: '12px', padding: '16px', marginTop: '16px',
+                    }}>
+                      <div style={{ fontSize: '10px', fontFamily: 'monospace', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#00d4a0', marginBottom: '8px' }}>
                         Transaction Hash
                       </div>
                       {txHash ? (
                         <>
-                          <p className="text-[11px] font-mono break-all mb-3 m-0" style={{ color: '#aaa' }}>{txHash}</p>
-                          <a href={`${EXPLORER}/tx/${txHash}`} target="_blank" rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 text-[13px] font-bold text-white no-underline rounded-lg px-4 py-2.5"
-                            style={{ background: '#f97316' }}>
+                          <p style={{ fontSize: '11px', fontFamily: 'monospace', wordBreak: 'break-all', color: '#aaa', margin: '0 0 12px' }}>
+                            {txHash}
+                          </p>
+                          <a href={`${EXPLORER}/tx/${txHash}`} target="_blank" rel="noopener noreferrer" style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '8px',
+                            background: '#f97316', color: '#fff', fontSize: '13px', fontWeight: 700,
+                            padding: '10px 18px', borderRadius: '8px', textDecoration: 'none',
+                          }}>
                             View on X Layer Explorer ↗
                           </a>
                         </>
                       ) : (
-                        <p className="text-[12px] m-0" style={{ color: '#555' }}>
+                        <p style={{ fontSize: '12px', color: '#555', margin: 0 }}>
                           Settlement pending — tx hash will appear once confirmed on-chain
                         </p>
                       )}
@@ -217,17 +252,22 @@ export function CallModal({ agent, onClose }: Props) {
               </>
             )}
 
-            {/* ── ERROR ───────────────────────── */}
+            {/* ── ERROR ───────────────────────────────────── */}
             {step === 'error' && (
               <>
-                <div className="rounded-xl p-4 mb-4"
-                  style={{ background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)' }}>
-                  <div className="text-[13px] font-bold mb-1" style={{ color: '#ef4444' }}>Call Failed</div>
-                  <div className="text-[12px] leading-relaxed" style={{ color: '#888' }}>{errMsg}</div>
+                <div style={{
+                  background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+                  borderRadius: '12px', padding: '16px', marginBottom: '16px',
+                }}>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#ef4444', marginBottom: '4px' }}>Call Failed</div>
+                  <div style={{ fontSize: '12px', color: '#888', lineHeight: 1.5 }}>{errMsg}</div>
                 </div>
-                <button onClick={() => { setStep('input'); setErrMsg(''); }}
-                  className="w-full py-3 rounded-xl text-[13px] font-semibold cursor-pointer"
-                  style={{ background: 'transparent', color: '#888', border: '1px solid rgba(255,255,255,.1)', fontFamily: FONT }}>
+                <button onClick={() => { setStep('input'); setErrMsg(''); }} style={{
+                  width: '100%', padding: '12px', borderRadius: '12px',
+                  background: 'transparent', color: '#888',
+                  border: '1px solid rgba(255,255,255,0.1)', fontSize: '13px',
+                  fontWeight: 600, cursor: 'pointer', fontFamily: FONT,
+                }}>
                   Try Again
                 </button>
               </>
@@ -236,14 +276,7 @@ export function CallModal({ agent, onClose }: Props) {
         </div>
       </div>
 
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.4; }
-        }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
+      <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }`}</style>
     </>
   );
 }
