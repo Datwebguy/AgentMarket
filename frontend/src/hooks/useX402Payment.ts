@@ -18,6 +18,7 @@
 import { useState, useCallback } from 'react';
 import { useAccount, useSignTypedData } from 'wagmi';
 import { ethers } from 'ethers';
+import { switchToXLayer } from '../lib/switchToXLayer';
 
 // Hardcoded fallbacks — NEXT_PUBLIC_ vars must be baked in at Vercel build time
 const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS || '0x74b7F16337b8972027F6196A17a631aC6dE26d22';
@@ -57,6 +58,9 @@ export function useX402Payment(): UseX402Result {
 
       setIsSigning(true);
       setError(null);
+
+      // Ensure wallet is on XLayer before signing the payment authorization
+      try { await switchToXLayer(); } catch { /* continue — signature may still work */ }
 
       try {
         // Convert USDC amount to base units (6 decimals)

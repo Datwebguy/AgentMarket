@@ -6,6 +6,7 @@ import { SiweMessage } from 'siwe';
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
 import { useAuthStore } from '../hooks/useAuthStore';
+import { switchToXLayer } from '../lib/switchToXLayer';
 
 const CHAIN_ID = parseInt(process.env.NEXT_PUBLIC_X_LAYER_CHAIN_ID || '196');
 
@@ -30,13 +31,12 @@ export function Navbar() {
   async function handleConnect() {
     try {
       setSigning(true);
+
+      // Switch to XLayer BEFORE connecting so the wallet is on the right chain
+      try { await switchToXLayer(); } catch { /* wallet may reject — continue anyway */ }
+
       const result = await connectAsync({ connector: injected(), chainId: CHAIN_ID });
       const walletAddress = result.accounts[0];
-
-      // Switch to XLayer if the wallet didn't switch automatically
-      if (result.chainId !== CHAIN_ID) {
-        try { await switchChainAsync({ chainId: CHAIN_ID }); } catch { /* wallet may not support programmatic switch */ }
-      }
 
       // Get nonce from backend
       const nonce = await api.getNonce();
@@ -110,7 +110,7 @@ export function Navbar() {
         {/* Wrong chain — show switch button */}
         {isConnected && chain?.id !== CHAIN_ID && (
           <button
-            onClick={() => switchChainAsync({ chainId: CHAIN_ID }).catch(() => {})}
+            onClick={() => switchToXLayer().catch(() => {})}
             style={{
               background: 'rgba(249,115,22,.15)', color: '#f97316',
               border: '1px solid rgba(249,115,22,.3)', borderRadius: 999,
