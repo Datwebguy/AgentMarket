@@ -4,6 +4,15 @@ const nextConfig = {
   images: {
     domains: ['avatars.githubusercontent.com', 'ipfs.io'],
   },
+  webpack: (config) => {
+    // Silence missing optional peer dependencies from MetaMask SDK and WalletConnect
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      '@react-native-async-storage/async-storage': false,
+      'pino-pretty': false,
+    };
+    return config;
+  },
   async headers() {
     return [
       {

@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const params   = useSearchParams();
   const router   = useRouter();
   const token    = params.get('token');
@@ -56,5 +56,18 @@ export default function VerifyEmailPage() {
       </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </main>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <main style={{ minHeight: '100vh', background: '#080808', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 48, height: 48, border: '3px solid rgba(124,92,252,.2)', borderTop: '3px solid #7c5cfc', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      </main>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
