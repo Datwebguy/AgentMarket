@@ -19,6 +19,7 @@ import axios                           from 'axios';
 import { z }                           from 'zod';
 import { prisma }                      from '../lib/prisma';
 import { x402Service }                 from '../services/x402.service';
+import { runAgentCode }                from '../services/runner.service';
 import { authenticate, optionalAuthenticate } from '../middleware/authenticate';
 
 export const callsRouter = Router();
@@ -114,34 +115,42 @@ callsRouter.post(
         data:  { status: 'EXECUTING' },
       });
 
-      // 7. Forward request to agent endpoint
+      // 7. Execute agent — either run hosted code or forward to external URL
       let agentResponse: any;
       let agentError: string | undefined;
 
-      try {
-        const agentRes = await axios.post(
-          agent.endpointUrl,
-          req.body,
-          {
+      if (agent.code) {
+        // Platform-hosted: run the builder's code in a sandbox
+        try {
+          agentResponse = await runAgentCode(agent.code, req.body);
+        } catch (err: any) {
+          agentError = err?.message || String(err);
+          console.error('Hosted agent runtime error:', agentError);
+        }
+      } else if (agent.endpointUrl) {
+        // External URL: forward the request
+        try {
+          const agentRes = await axios.post(agent.endpointUrl, req.body, {
             timeout: 30_000,
             headers: {
               'Content-Type':     'application/json',
               'X-AgentMarket-Id': callRecord.id,
               'X-Caller-Wallet':  payment.from,
             },
-          }
-        );
-        agentResponse = agentRes.data;
-      } catch (err: any) {
-        // Capture the real error — could be ECONNREFUSED (agent down), timeout, or HTTP error
-        agentError = err?.response?.data
-          ? JSON.stringify(err.response.data)
-          : err?.code === 'ECONNREFUSED'
-            ? `Agent endpoint unreachable: ${agent.endpointUrl}`
-            : err?.code === 'ETIMEDOUT' || err?.code === 'ECONNABORTED'
-              ? `Agent timed out after 30s: ${agent.endpointUrl}`
-              : err?.message || String(err);
-        console.error('Agent call error:', agentError);
+          });
+          agentResponse = agentRes.data;
+        } catch (err: any) {
+          agentError = err?.response?.data
+            ? JSON.stringify(err.response.data)
+            : err?.code === 'ECONNREFUSED'
+              ? `Agent endpoint unreachable: ${agent.endpointUrl}`
+              : err?.code === 'ETIMEDOUT' || err?.code === 'ECONNABORTED'
+                ? `Agent timed out after 30s: ${agent.endpointUrl}`
+                : err?.message || String(err);
+          console.error('External agent call error:', agentError);
+        }
+      } else {
+        agentError = 'Agent has no code or endpoint configured';
       }
 
       const responseMs = Date.now() - startMs;

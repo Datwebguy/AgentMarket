@@ -139,14 +139,17 @@ agentsRouter.get('/:slug', async (req: Request, res: Response) => {
 
 // ─── DEPLOY NEW AGENT ────────────────────────────────────────────────────────
 const deploySchema = z.object({
-  name:        z.string().min(3).max(80),
-  description: z.string().min(20).max(1000),
-  category:    z.enum(['DEFI','RISK','TRADING','INTELLIGENCE','PAYMENTS','INFRASTRUCTURE','OTHER']),
-  endpointUrl: z.string().url(),
+  name:             z.string().min(3).max(80),
+  description:      z.string().min(20).max(1000),
+  category:         z.enum(['DEFI','RISK','TRADING','INTELLIGENCE','PAYMENTS','INFRASTRUCTURE','OTHER']),
+  endpointUrl:      z.string().url().optional(),
+  code:             z.string().min(10).max(50_000).optional(),
   pricePerCallUsdc: z.number().min(0.0001).max(100),
-  tags:        z.array(z.string()).max(5).optional(),
-  inputSchema: z.record(z.unknown()).optional(),
-  outputSchema: z.record(z.unknown()).optional(),
+  tags:             z.array(z.string()).max(5).optional(),
+  inputSchema:      z.record(z.unknown()).optional(),
+  outputSchema:     z.record(z.unknown()).optional(),
+}).refine(d => d.endpointUrl || d.code, {
+  message: 'Provide either code (hosted) or an endpointUrl (external)',
 });
 
 agentsRouter.post('/', authenticate, async (req: Request, res: Response) => {
@@ -172,7 +175,8 @@ agentsRouter.post('/', authenticate, async (req: Request, res: Response) => {
         slug,
         description:      body.description,
         category:         body.category,
-        endpointUrl:      body.endpointUrl,
+        endpointUrl:      body.endpointUrl || null,
+        code:             body.code || null,
         pricePerCallUsdc: body.pricePerCallUsdc,
         walletAddress:    agentWallet.address,
         tags:             body.tags || [],

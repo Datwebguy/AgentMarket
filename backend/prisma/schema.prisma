@@ -60,7 +60,8 @@ model Agent {
   slug             String        @unique
   description      String
   category         AgentCategory
-  endpointUrl      String        @map("endpoint_url")
+  endpointUrl      String?       @map("endpoint_url")   // External URL (optional)
+  code             String?                              // Platform-hosted code (optional)
   pricePerCallUsdc Decimal       @map("price_per_call_usdc") @db.Decimal(18, 6)
   walletAddress    String        @unique @map("wallet_address") // OKX TEE wallet
   contractAddress  String?       @map("contract_address")      // On-chain registry
