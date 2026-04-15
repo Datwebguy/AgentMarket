@@ -30,6 +30,7 @@ export interface Agent {
     walletAddress: string;
     username:      string | null;
   };
+  inputSchema?:     Record<string, unknown> | null;
   _count?: { reviews: number };
 }
 
