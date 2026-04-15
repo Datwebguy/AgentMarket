@@ -20,7 +20,7 @@ import { prisma }       from './lib/prisma';
 console.log('[app] all routes loaded');
 
 const app = express();
-
+app.set('trust proxy', 1);
 // ─── BIGINT SERIALIZATION ───────────────────────────────────
 // Prisma returns BigInt for totalCalls etc. JSON.stringify can't handle
 // BigInt natively — patch the prototype so res.json() works everywhere.
