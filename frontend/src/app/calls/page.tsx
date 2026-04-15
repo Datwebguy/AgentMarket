@@ -196,7 +196,7 @@ export default function CallsPage() {
             <a href="/dashboard" className="text-[13px] no-underline" style={{ color: '#555' }}>← Dashboard</a>
             <h1 className="text-[22px] sm:text-[28px] font-black tracking-tight mt-2 mb-1">Call History</h1>
             <p className="text-[13px] m-0" style={{ color: '#555' }}>
-              {data ? `${data.pagination.total} total calls` : 'All calls you've made or received'}
+              {data ? `${data.pagination.total} total calls` : "All calls you've made or received"}
             </p>
           </div>
           <a href="/marketplace"
