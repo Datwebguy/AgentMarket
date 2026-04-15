@@ -14,7 +14,7 @@ const CATEGORIES = [
   { key: 'TRADING',        label: 'Trading'        },
   { key: 'INTELLIGENCE',   label: 'Intelligence'   },
   { key: 'PAYMENTS',       label: 'Payments'       },
-  { key: 'INFRASTRUCTURE', label: 'Infrastructure' },
+  { key: 'INFRASTRUCTURE', label: 'Infra'          },
 ];
 
 const SORT_OPTIONS = [
@@ -25,6 +25,8 @@ const SORT_OPTIONS = [
   { value: 'createdAt',     label: 'Newest'       },
 ];
 
+const FONT = "'Figtree', sans-serif";
+
 export default function MarketplacePage() {
   const [category, setCategory] = useState('');
   const [search,   setSearch]   = useState('');
@@ -34,13 +36,7 @@ export default function MarketplacePage() {
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['agents', { category, search, sort, page }],
-    queryFn:  () => api.listAgents({
-      category: category || undefined,
-      search:   search   || undefined,
-      sort,
-      page,
-      limit: 12,
-    }),
+    queryFn:  () => api.listAgents({ category: category || undefined, search: search || undefined, sort, page, limit: 12 }),
     retry: 2,
   });
 
@@ -58,76 +54,76 @@ export default function MarketplacePage() {
   return (
     <>
       <Navbar />
-      <main style={{ minHeight: '100vh', background: '#080808', color: '#fff', fontFamily: "'Figtree', sans-serif" }}>
+      <main style={{ minHeight: '100vh', background: '#080808', color: '#fff', fontFamily: FONT }}>
 
-        {/* PAGE HEADER */}
-        <div className="mkt-header" style={{ maxWidth: 1200, margin: '0 auto', padding: '40px 32px 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+        {/* ── HEADER ──────────────────────────────── */}
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-8 pt-6 sm:pt-10 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="mkt-h1" style={{ fontWeight: 900, fontSize: 32, letterSpacing: '-1px', color: '#fff', margin: 0 }}>Marketplace</h1>
-            <p style={{ fontSize: 14, color: '#555', fontWeight: 400, margin: '4px 0 0' }}>
+            <h1 className="text-[24px] sm:text-[32px] font-black tracking-tight text-white m-0">Marketplace</h1>
+            <p className="text-[13px] sm:text-[14px] mt-1 m-0" style={{ color: '#555' }}>
               {stats
                 ? `${stats.totalAgents} agents live · ${stats.totalCalls?.toLocaleString()} calls today`
                 : 'Discover and call AI agents on XLayer'}
             </p>
           </div>
-          <a href="/deploy" style={{ background: '#f97316', color: '#fff', borderRadius: 999, padding: '10px 22px', fontSize: 13, fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+          <a href="/deploy"
+            className="text-[13px] font-bold text-white no-underline rounded-full px-5 py-2.5 whitespace-nowrap"
+            style={{ background: '#f97316' }}>
             + Deploy Agent
           </a>
         </div>
 
-        {/* STATS STRIP */}
+        {/* ── STATS STRIP ─────────────────────────── */}
         {stats && (
-          <div className="mkt-stats" style={{ maxWidth: 1200, margin: '24px auto 0', padding: '0 32px' }}>
-            <div className="mkt-stats-inner" style={{ display: 'flex', border: '1px solid rgba(255,255,255,.06)', borderRadius: 14, background: '#101010', overflow: 'hidden' }}>
+          <div className="max-w-[1200px] mx-auto px-4 sm:px-8 mt-5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 rounded-xl overflow-hidden"
+              style={{ border: '1px solid rgba(255,255,255,.06)', background: '#101010' }}>
               {[
-                { label: 'Agents Live',    value: stats.totalAgents,                                         color: '#f97316' },
-                { label: 'Calls Today',    value: stats.totalCalls?.toLocaleString(),                        color: '#00d4a0' },
-                { label: 'Volume Settled', value: `$${parseFloat(stats.totalVolumeUsdc || '0').toFixed(2)}`, color: '#fff'    },
-                { label: 'Avg Response',   value: `${stats.avgResponseMs || 0}ms`,                           color: '#fff'    },
-              ].map((s, i, arr) => (
-                <div key={s.label} className="mkt-stat-item" style={{ flex: 1, padding: '16px 24px', borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,.06)' : 'none', textAlign: 'center' }}>
-                  <div style={{ fontWeight: 900, fontSize: 22, letterSpacing: '-1px', lineHeight: 1, marginBottom: 4, color: s.color }}>{s.value}</div>
-                  <div style={{ fontSize: 11, color: '#444', fontFamily: 'monospace', letterSpacing: '.5px', textTransform: 'uppercase' }}>{s.label}</div>
+                { label: 'Agents Live',    value: stats.totalAgents,                                          color: '#f97316' },
+                { label: 'Calls Today',    value: stats.totalCalls?.toLocaleString(),                         color: '#00d4a0' },
+                { label: 'Volume Settled', value: `$${parseFloat(stats.totalVolumeUsdc || '0').toFixed(2)}`,  color: '#fff'    },
+                { label: 'Avg Response',   value: `${stats.avgResponseMs || 0}ms`,                            color: '#fff'    },
+              ].map((s, i) => (
+                <div key={s.label} className="flex flex-col items-center justify-center py-4 px-3"
+                  style={{ borderRight: (i % 2 === 0 || i < 2) ? '1px solid rgba(255,255,255,.06)' : 'none',
+                           borderBottom: i < 2 ? '1px solid rgba(255,255,255,.06)' : 'none' }}>
+                  <div className="font-black text-[18px] sm:text-[22px] tracking-tight leading-none mb-1"
+                    style={{ color: s.color }}>{s.value}</div>
+                  <div className="text-[10px] sm:text-[11px] font-mono tracking-wide uppercase" style={{ color: '#444' }}>{s.label}</div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* FILTERS */}
-        <div className="mkt-filters" style={{ maxWidth: 1200, margin: '24px auto 0', padding: '0 32px', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+        {/* ── FILTERS ─────────────────────────────── */}
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-8 mt-5 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
 
           {/* Search */}
-          <div className="mkt-search" style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#111', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, padding: '0 14px', minWidth: 220, height: 38 }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" style={{ flexShrink: 0 }}>
+          <div className="flex items-center gap-2 rounded-xl px-4 h-10 flex-1 sm:flex-initial sm:min-w-[200px]"
+            style={{ background: '#111', border: '1px solid rgba(255,255,255,.1)' }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="2.5" className="flex-shrink-0">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search agents..."
-              style={{ background: 'transparent', border: 'none', outline: 'none', color: '#fff', fontFamily: "'Figtree', sans-serif", fontSize: 13, width: '100%' }}
-            />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search agents..."
+              className="bg-transparent border-none outline-none text-white text-[13px] w-full"
+              style={{ fontFamily: FONT }} />
           </div>
 
-          {/* Category pills */}
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', flex: 1 }}>
+          {/* Category pills — scrollable on mobile */}
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5 flex-1 scrollbar-hide">
             {CATEGORIES.map(cat => {
               const active = category === cat.key;
               return (
-                <button
-                  key={cat.key}
-                  onClick={() => setCategory(cat.key)}
+                <button key={cat.key} onClick={() => setCategory(cat.key)}
+                  className="text-[12px] px-3 py-1.5 rounded-full whitespace-nowrap cursor-pointer flex-shrink-0 transition-all"
                   style={{
-                    fontSize: 12, padding: '6px 14px', borderRadius: 999,
                     border: `1px solid ${active ? 'rgba(249,115,22,.4)' : 'rgba(255,255,255,.08)'}`,
                     background: active ? 'rgba(249,115,22,.18)' : 'rgba(255,255,255,.04)',
-                    color: active ? '#f97316' : '#777',
+                    color:      active ? '#f97316' : '#777',
                     fontWeight: active ? 700 : 500,
-                    cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
-                    transition: 'all .15s',
-                  }}
-                >
+                    fontFamily: FONT,
+                  }}>
                   {cat.label}
                 </button>
               );
@@ -135,79 +131,75 @@ export default function MarketplacePage() {
           </div>
 
           {/* Sort */}
-          <select
-            value={sort}
-            onChange={e => setSort(e.target.value)}
-            className="mkt-sort"
-            style={{ background: '#111', border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, padding: '0 14px', color: '#888', fontFamily: "'Figtree', sans-serif", fontSize: 13, outline: 'none', cursor: 'pointer', height: 38, marginLeft: 'auto' }}
-          >
+          <select value={sort} onChange={e => setSort(e.target.value)}
+            className="rounded-xl px-4 h-10 text-[13px] cursor-pointer outline-none flex-shrink-0"
+            style={{ background: '#111', border: '1px solid rgba(255,255,255,.1)', color: '#888', fontFamily: FONT }}>
             {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </div>
 
-        {/* CONTENT */}
-        <div className="mkt-content" style={{ maxWidth: 1200, margin: '0 auto', padding: '24px 32px 80px' }}>
+        {/* ── CONTENT ─────────────────────────────── */}
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-8 py-6 pb-20">
 
           {/* Loading skeletons */}
           {isLoading && (
-            <div className="mkt-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} style={{ background: '#101010', border: '1px solid rgba(255,255,255,.06)', borderRadius: 16, padding: 22, minHeight: 200 }}>
-                  <div style={{ background: 'rgba(255,255,255,.05)', borderRadius: 6, height: 14, width: '40%', marginBottom: 14 }} />
-                  <div style={{ background: 'rgba(255,255,255,.05)', borderRadius: 6, height: 20, width: '75%', marginBottom: 10 }} />
-                  <div style={{ background: 'rgba(255,255,255,.05)', borderRadius: 6, height: 14, width: '60%', marginBottom: 8 }} />
-                  <div style={{ background: 'rgba(255,255,255,.05)', borderRadius: 6, height: 14, width: '50%' }} />
+                <div key={i} className="rounded-2xl p-5 min-h-[200px]"
+                  style={{ background: '#101010', border: '1px solid rgba(255,255,255,.06)' }}>
+                  <div className="h-3 rounded mb-4 w-2/5" style={{ background: 'rgba(255,255,255,.05)' }} />
+                  <div className="h-5 rounded mb-3 w-3/4" style={{ background: 'rgba(255,255,255,.05)' }} />
+                  <div className="h-3 rounded mb-2 w-3/5" style={{ background: 'rgba(255,255,255,.05)' }} />
+                  <div className="h-3 rounded w-1/2"       style={{ background: 'rgba(255,255,255,.05)' }} />
                 </div>
               ))}
             </div>
           )}
 
-          {/* Error state */}
+          {/* Error */}
           {error && !isLoading && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '80px 24px', textAlign: 'center', gap: 12 }}>
-              <div style={{ fontSize: 44, marginBottom: 4 }}>⚡</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-.5px' }}>Backend error</div>
-              <div style={{ fontSize: 14, color: '#666', maxWidth: 480, lineHeight: 1.8, fontWeight: 400 }}>
-                The API returned an error. Check the Railway service logs for a database connection issue.
+            <div className="flex flex-col items-center py-20 text-center gap-3">
+              <div className="text-[40px] mb-1">⚡</div>
+              <div className="text-[18px] font-black tracking-tight">Backend error</div>
+              <div className="text-[13px] max-w-[420px] leading-relaxed" style={{ color: '#666' }}>
+                The API returned an error. Check the Railway logs for a database connection issue.
               </div>
               {(error as any)?.response?.data?.detail && (
-                <code style={{ fontSize: 12, color: '#ef4444', background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.15)', borderRadius: 8, padding: '8px 14px', maxWidth: 560, textAlign: 'left', wordBreak: 'break-all' }}>
+                <code className="text-[11px] rounded-xl px-4 py-2 max-w-[480px] text-left break-all"
+                  style={{ color: '#ef4444', background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.15)' }}>
                   {(error as any).response.data.detail}
                 </code>
               )}
-              <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                <button
-                  onClick={() => refetch()}
-                  style={{ background: '#f97316', color: '#fff', border: 'none', borderRadius: 999, padding: '10px 24px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  Try Again
-                </button>
-              </div>
+              <button onClick={() => refetch()}
+                className="mt-2 text-[13px] font-bold text-white px-6 py-2.5 rounded-full cursor-pointer"
+                style={{ background: '#f97316', border: 'none', fontFamily: FONT }}>
+                Try Again
+              </button>
             </div>
           )}
 
-          {/* Empty state */}
+          {/* Empty */}
           {isEmpty && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '100px 24px', textAlign: 'center', gap: 12 }}>
-              <div style={{ fontSize: 56, opacity: .25, marginBottom: 8 }}>🤖</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', letterSpacing: '-.5px' }}>
+            <div className="flex flex-col items-center py-24 text-center gap-3">
+              <div className="text-[48px] opacity-20 mb-2">🤖</div>
+              <div className="text-[18px] font-black tracking-tight">
                 {search || category ? 'No agents match your filters' : 'No agents deployed yet'}
               </div>
-              <div style={{ fontSize: 14, color: '#555', maxWidth: 420, lineHeight: 1.8, fontWeight: 400 }}>
+              <div className="text-[13px] max-w-[360px] leading-relaxed" style={{ color: '#555' }}>
                 {search || category
                   ? 'Try clearing your search or selecting a different category.'
-                  : 'Be the first builder to deploy an AI agent on AgentMarket and start earning USDC per call via x402.'}
+                  : 'Be the first builder to deploy an AI agent and start earning USDC per call.'}
               </div>
               {!search && !category && (
-                <a href="/deploy" style={{ marginTop: 12, background: '#f97316', color: '#fff', borderRadius: 999, padding: '13px 28px', fontSize: 14, fontWeight: 700, textDecoration: 'none', display: 'inline-block', fontFamily: 'inherit' }}>
+                <a href="/deploy" className="mt-3 text-[14px] font-bold text-white no-underline rounded-full px-7 py-3"
+                  style={{ background: '#f97316' }}>
                   Deploy the First Agent
                 </a>
               )}
               {(search || category) && (
-                <button
-                  onClick={() => { setSearch(''); setCategory(''); }}
-                  style={{ marginTop: 8, background: 'transparent', color: '#666', border: '1px solid rgba(255,255,255,.1)', borderRadius: 999, padding: '10px 24px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}
-                >
+                <button onClick={() => { setSearch(''); setCategory(''); }}
+                  className="mt-2 text-[13px] font-semibold px-6 py-2.5 rounded-full cursor-pointer"
+                  style={{ background: 'transparent', color: '#666', border: '1px solid rgba(255,255,255,.1)', fontFamily: FONT }}>
                   Clear Filters
                 </button>
               )}
@@ -217,15 +209,13 @@ export default function MarketplacePage() {
           {/* Agent grid */}
           {!isLoading && !error && data && data.agents.length > 0 && (
             <>
-              <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 13, color: '#444', fontFamily: 'monospace' }}>
-                  {data.pagination.total} {data.pagination.total === 1 ? 'agent' : 'agents'}
-                  {search && ` matching "${search}"`}
-                  {category && ` in ${CATEGORIES.find(c => c.key === category)?.label}`}
-                </span>
-              </div>
+              <p className="text-[12px] font-mono mb-4" style={{ color: '#444' }}>
+                {data.pagination.total} {data.pagination.total === 1 ? 'agent' : 'agents'}
+                {search && ` matching "${search}"`}
+                {category && ` in ${CATEGORIES.find(c => c.key === category)?.label}`}
+              </p>
 
-              <div className="mkt-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {data.agents.map(agent => (
                   <AgentCard key={agent.id} agent={agent} onCall={() => setSelected(agent)} />
                 ))}
@@ -233,35 +223,28 @@ export default function MarketplacePage() {
 
               {/* Pagination */}
               {data.pagination.totalPages > 1 && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 48 }}>
-                  <button
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    style={{ background: 'transparent', color: '#888', border: '1px solid rgba(255,255,255,.1)', borderRadius: 999, padding: '8px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: page === 1 ? .3 : 1 }}
-                  >
-                    &larr; Previous
+                <div className="flex items-center justify-center gap-2 mt-12 flex-wrap">
+                  <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                    className="text-[13px] font-semibold px-5 py-2 rounded-full cursor-pointer disabled:opacity-30"
+                    style={{ background: 'transparent', color: '#888', border: '1px solid rgba(255,255,255,.1)', fontFamily: FONT }}>
+                    ← Prev
                   </button>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {Array.from({ length: data.pagination.totalPages }, (_, i) => i + 1)
-                      .filter(p => p === 1 || p === data.pagination.totalPages || Math.abs(p - page) <= 1)
-                      .map((p, idx, arr) => (
-                        <span key={p} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                          {idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ color: '#333', padding: '0 2px' }}>...</span>}
-                          <button
-                            onClick={() => setPage(p)}
-                            style={{ width: 34, height: 34, borderRadius: '50%', border: 'none', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', background: p === page ? '#f97316' : 'transparent', color: p === page ? '#fff' : '#666', transition: 'all .15s' }}
-                          >
-                            {p}
-                          </button>
-                        </span>
-                      ))}
-                  </div>
-                  <button
-                    onClick={() => setPage(p => Math.min(data.pagination.totalPages, p + 1))}
-                    disabled={page === data.pagination.totalPages}
-                    style={{ background: 'transparent', color: '#888', border: '1px solid rgba(255,255,255,.1)', borderRadius: 999, padding: '8px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', opacity: page === data.pagination.totalPages ? .3 : 1 }}
-                  >
-                    Next &rarr;
+                  {Array.from({ length: data.pagination.totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === data.pagination.totalPages || Math.abs(p - page) <= 1)
+                    .map((p, idx, arr) => (
+                      <span key={p} className="flex items-center gap-1">
+                        {idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ color: '#333' }}>…</span>}
+                        <button onClick={() => setPage(p)}
+                          className="w-9 h-9 rounded-full text-[13px] font-semibold cursor-pointer border-none transition-all"
+                          style={{ background: p === page ? '#f97316' : 'transparent', color: p === page ? '#fff' : '#666', fontFamily: FONT }}>
+                          {p}
+                        </button>
+                      </span>
+                    ))}
+                  <button onClick={() => setPage(p => Math.min(data.pagination.totalPages, p + 1))} disabled={page === data.pagination.totalPages}
+                    className="text-[13px] font-semibold px-5 py-2 rounded-full cursor-pointer disabled:opacity-30"
+                    style={{ background: 'transparent', color: '#888', border: '1px solid rgba(255,255,255,.1)', fontFamily: FONT }}>
+                    Next →
                   </button>
                 </div>
               )}
