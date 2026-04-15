@@ -220,6 +220,108 @@ async function run(input) {
 }
 `.trim();
 
+// ── Agent 7: OKX Whale Tracker (TRADING) ─────────────────────────────────────
+const WHALE_TRACKER_CODE = `
+async function run(input) {
+  const pair   = (input.pair || input.symbol || 'BTC-USDT').toUpperCase().replace('/', '-');
+  const minUsd = parseFloat(input.minUsd || input.min || '500000');
+  const resp = await fetch('https://www.okx.com/api/v5/market/trades?instId=' + pair + '&limit=100');
+  if (!resp.ok) throw new Error('OKX API error: ' + resp.status);
+  const json = await resp.json();
+  if (!json.data || json.data.length === 0) return { error: 'No trades found for: ' + pair, hint: 'Try: BTC-USDT, ETH-USDT, SOL-USDT, OKB-USDT' };
+  const trades = json.data.map(function(t) {
+    var usd = parseFloat(t.px) * parseFloat(t.sz);
+    return { side: t.side, price: parseFloat(t.px), size: parseFloat(t.sz), usdValue: parseFloat(usd.toFixed(2)), time: new Date(parseInt(t.ts)).toISOString() };
+  });
+  const whales = trades.filter(function(t) { return t.usdValue >= minUsd; }).sort(function(a,b) { return b.usdValue - a.usdValue; });
+  var buyVol = 0, sellVol = 0;
+  whales.forEach(function(t) { if(t.side==='buy') buyVol+=t.usdValue; else sellVol+=t.usdValue; });
+  var pressure = buyVol >= sellVol ? 'BUYING' : 'SELLING';
+  return {
+    pair, minUsdThreshold: minUsd, whaleCount: whales.length,
+    topWhales: whales.slice(0, 10),
+    buyVolumeUsd: parseFloat(buyVol.toFixed(2)),
+    sellVolumeUsd: parseFloat(sellVol.toFixed(2)),
+    totalVolumeUsd: parseFloat((buyVol + sellVol).toFixed(2)),
+    pressure,
+    signal: pressure === 'BUYING' ? 'Whales accumulating — bullish pressure' : 'Whales distributing — bearish pressure',
+    summary: whales.length + ' whale trades in ' + pair + ' above $' + minUsd.toLocaleString() + ' — ' + pressure + ' pressure',
+    source: 'OKX', timestamp: new Date().toISOString(),
+  };
+}
+`.trim();
+
+// ── Agent 8: Trending Tokens Scanner (INTELLIGENCE) ──────────────────────────
+const TRENDING_CODE = `
+async function run(input) {
+  var filter = (input.filter || input.type || 'gainers').toLowerCase();
+  var limit  = Math.min(parseInt(input.limit || '10'), 25);
+  var minVol = parseFloat(input.minVolume || '500000');
+  var resp = await fetch('https://www.okx.com/api/v5/market/tickers?instType=SPOT');
+  if (!resp.ok) throw new Error('OKX API error: ' + resp.status);
+  var json = await resp.json();
+  if (!json.data) return { error: 'No data returned' };
+  var tickers = json.data
+    .filter(function(t) { return t.instId.endsWith('-USDT') && parseFloat(t.volCcy24h || '0') >= minVol; })
+    .map(function(t) {
+      var price = parseFloat(t.last);
+      var open  = parseFloat(t.open24h);
+      var chg   = open > 0 ? ((price - open) / open * 100) : 0;
+      return { symbol: t.instId.replace('-USDT',''), pair: t.instId, price: price, change24h: parseFloat(chg.toFixed(2)), volume24hUsd: parseFloat(parseFloat(t.volCcy24h||'0').toFixed(0)), high24h: parseFloat(t.high24h), low24h: parseFloat(t.low24h) };
+    });
+  var sorted;
+  if (filter === 'losers')       sorted = tickers.sort(function(a,b){return a.change24h - b.change24h;});
+  else if (filter === 'volume')  sorted = tickers.sort(function(a,b){return b.volume24hUsd - a.volume24hUsd;});
+  else                           sorted = tickers.sort(function(a,b){return b.change24h - a.change24h;});
+  var top = sorted.slice(0, limit);
+  var leader = top[0];
+  return {
+    filter, count: top.length, tokens: top,
+    summary: 'Top ' + limit + ' ' + filter + ' on OKX — ' + (leader ? leader.symbol + ' leads at ' + (leader.change24h >= 0 ? '+' : '') + leader.change24h + '%' : 'no data'),
+    source: 'OKX', timestamp: new Date().toISOString(),
+  };
+}
+`.trim();
+
+// ── Agent 9: DEX Swap Quote (DEFI) ───────────────────────────────────────────
+const SWAP_QUOTE_CODE = `
+async function run(input) {
+  var chainId   = parseInt(input.chainId || '196');
+  var fromToken = input.fromToken || input.from || '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+  var toToken   = input.toToken   || input.to   || '0x74b7f16337b8972027f6196a17a631ac6de26d22';
+  var amount    = input.amount || '1000000000000000000';
+  var chainNames = { 1:'Ethereum', 137:'Polygon', 196:'XLayer', 42161:'Arbitrum', 8453:'Base', 10:'Optimism', 56:'BSC' };
+  var url = 'https://www.okx.com/api/v5/dex/aggregator/quote?chainId=' + chainId + '&fromTokenAddress=' + fromToken + '&toTokenAddress=' + toToken + '&amount=' + amount;
+  var resp = await fetch(url);
+  if (!resp.ok) throw new Error('OKX DEX API error: ' + resp.status);
+  var json = await resp.json();
+  if (json.code !== '0' || !json.data || !json.data[0]) return { error: json.msg || 'Quote failed', hint: 'Check token addresses and chainId. XLayer chainId = 196.' };
+  var q = json.data[0];
+  var fromDec  = parseInt(q.fromToken && q.fromToken.decimal ? q.fromToken.decimal : '18');
+  var toDec    = parseInt(q.toToken   && q.toToken.decimal   ? q.toToken.decimal   : '18');
+  var fromAmt  = parseFloat(amount) / Math.pow(10, fromDec);
+  var toAmt    = parseFloat(q.toTokenAmount) / Math.pow(10, toDec);
+  var fromSym  = q.fromToken ? q.fromToken.tokenSymbol : 'FROM';
+  var toSym    = q.toToken   ? q.toToken.tokenSymbol   : 'TO';
+  var routes = [];
+  if (q.quoteCompareList) {
+    routes = q.quoteCompareList.slice(0, 5).map(function(r) {
+      return { dex: r.dexName, toAmount: parseFloat((parseFloat(r.toTokenAmount) / Math.pow(10, toDec)).toFixed(6)), percent: r.percent };
+    });
+  }
+  return {
+    network: chainNames[chainId] || 'Chain ' + chainId, chainId,
+    from: { address: fromToken, symbol: fromSym, amount: fromAmt },
+    to:   { address: toToken,   symbol: toSym,   amount: parseFloat(toAmt.toFixed(6)) },
+    rate:        parseFloat((toAmt / fromAmt).toFixed(6)),
+    priceImpact: q.priceImpactPercentage || null,
+    bestRoutes:  routes,
+    summary:     fromAmt + ' ' + fromSym + ' → ' + toAmt.toFixed(4) + ' ' + toSym + ' on ' + (chainNames[chainId] || 'Chain ' + chainId) + ' via OKX DEX',
+    source: 'OKX DEX Aggregator', timestamp: new Date().toISOString(),
+  };
+}
+`.trim();
+
 // ── Seed ─────────────────────────────────────────────────────────────────────
 async function seed() {
   console.log('Seeding database...');
@@ -274,6 +376,27 @@ async function seed() {
       category: 'RISK' as const, code: ETH_WALLET_CODE, pricePerCallUsdc: 0.05,
       tags: ['ethereum', 'wallet', 'risk', 'on-chain', 'balance'], isVerified: true,
       inputSchema: { type: 'object', properties: { address: { type: 'string', description: 'Ethereum wallet or contract address (0x...)' } }, example: { address: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' } },
+    },
+    {
+      slug: 'okx-whale-tracker', name: 'OKX Whale Tracker',
+      description: 'Detect large whale trades on any OKX trading pair in real time. Pass a pair like BTC-USDT and a minimum USD threshold to surface the biggest trades, track buy vs sell pressure, and get a directional market signal. Ideal for traders and analysts watching smart money.',
+      category: 'TRADING' as const, code: WHALE_TRACKER_CODE, pricePerCallUsdc: 0.05,
+      tags: ['whale', 'trading', 'okx', 'on-chain', 'market-data'], isVerified: true,
+      inputSchema: { type: 'object', properties: { pair: { type: 'string', description: 'Trading pair e.g. BTC-USDT' }, minUsd: { type: 'number', description: 'Minimum USD trade size (default 500000)' } }, example: { pair: 'ETH-USDT', minUsd: 500000 } },
+    },
+    {
+      slug: 'trending-tokens-scanner', name: 'Trending Tokens Scanner',
+      description: 'Scan all OKX spot markets and surface the top gaining, losing, or highest-volume tokens right now. Filter by gainers, losers, or volume. Returns price, 24h change, and volume for each token. Perfect for finding momentum plays and market movers.',
+      category: 'INTELLIGENCE' as const, code: TRENDING_CODE, pricePerCallUsdc: 0.05,
+      tags: ['trending', 'tokens', 'gainers', 'losers', 'okx'], isVerified: true,
+      inputSchema: { type: 'object', properties: { filter: { type: 'string', description: 'gainers | losers | volume (default gainers)' }, limit: { type: 'number', description: 'Number of results (max 25, default 10)' } }, example: { filter: 'gainers', limit: 10 } },
+    },
+    {
+      slug: 'dex-swap-quote', name: 'DEX Swap Quote',
+      description: 'Get the best on-chain swap quote for any token pair across XLayer, Ethereum, Arbitrum, Base, Polygon and more — powered by OKX DEX Aggregator across 500+ liquidity sources. Returns rate, price impact, and best routes. XLayer (chainId 196) is the default chain.',
+      category: 'DEFI' as const, code: SWAP_QUOTE_CODE, pricePerCallUsdc: 0.05,
+      tags: ['dex', 'swap', 'xlayer', 'okx', 'defi', 'aggregator'], isVerified: true,
+      inputSchema: { type: 'object', properties: { chainId: { type: 'number', description: 'Chain ID: 196=XLayer, 1=ETH, 42161=Arbitrum, 137=Polygon, 8453=Base' }, fromToken: { type: 'string', description: 'From token contract address' }, toToken: { type: 'string', description: 'To token contract address' }, amount: { type: 'string', description: 'Amount in wei (default 1e18 = 1 token)' } }, example: { chainId: 196, fromToken: '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', toToken: '0x74b7f16337b8972027f6196a17a631ac6de26d22', amount: '1000000000000000000' } },
     },
   ];
 
