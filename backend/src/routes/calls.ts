@@ -97,30 +97,21 @@ callsRouter.post(
         },
       });
 
-      // 5. Settle payment on-chain
+      // 5. Settle payment on-chain (non-blocking — agent runs regardless)
+      // Settlement failure is logged but does NOT block the agent call.
+      // This allows the platform to work during bootstrap before the
+      // platform wallet is funded with OKB gas on X Layer.
       let txHash: string | undefined;
       let blockNumber: number | undefined;
 
-      try {
-        const settlement = await x402Service.settlePayment(
-          payment,
-          agent.walletAddress
-        );
-        txHash      = settlement.txHash;
-        blockNumber = settlement.blockNumber;
-      } catch (err) {
-        // Settlement failed — mark call as failed
-        await prisma.agentCall.update({
-          where: { id: callRecord.id },
-          data:  { status: 'FAILED', errorMessage: (err as Error).message },
-        });
-        return res.status(402).json({ error: 'Payment settlement failed on-chain' });
-      }
+      x402Service.settlePayment(payment, agent.walletAddress)
+        .then(s => { txHash = s.txHash; blockNumber = s.blockNumber; })
+        .catch(err => console.error('Settlement error (non-fatal):', err?.message));
 
       // 6. Update call to EXECUTING
       await prisma.agentCall.update({
         where: { id: callRecord.id },
-        data:  { status: 'EXECUTING', txHash, blockNumber: blockNumber ? BigInt(blockNumber) : null },
+        data:  { status: 'EXECUTING' },
       });
 
       // 7. Forward request to agent endpoint
