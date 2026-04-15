@@ -19,7 +19,8 @@ import { useState, useCallback } from 'react';
 import { useAccount, useSignTypedData } from 'wagmi';
 import { ethers } from 'ethers';
 
-const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS!;
+// Hardcoded fallbacks — NEXT_PUBLIC_ vars must be baked in at Vercel build time
+const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS || '0x74b7F16337b8972027F6196A17a631aC6dE26d22';
 const CHAIN_ID     = parseInt(process.env.NEXT_PUBLIC_X_LAYER_CHAIN_ID || '196');
 
 export interface X402PaymentPayload {
