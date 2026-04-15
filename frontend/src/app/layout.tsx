@@ -1,10 +1,17 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Providers }  from './providers';
 import { Analytics }  from '../lib/analytics';
 import { Footer }     from '../components/Footer';
 import './globals.css';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://agentmarket.xyz';
+
+// This is the critical fix — without this, mobile browsers render at a fake
+// 980px desktop width and all Tailwind responsive breakpoints fire on phones.
+export const viewport: Viewport = {
+  width:        'device-width',
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
