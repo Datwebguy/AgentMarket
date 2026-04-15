@@ -70,6 +70,7 @@ agentsRouter.get('/', optionalAuthenticate, async (req: Request, res: Response) 
           uptimePct:        true,
           tags:             true,
           isVerified:       true,
+          walletAddress:    true,
           createdAt:        true,
           owner: {
             select: { id: true, walletAddress: true, username: true },
