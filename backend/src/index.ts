@@ -75,10 +75,102 @@ app.use((_req, res) => {
 // ─── ERROR HANDLER ──────────────────────────────────────────
 app.use(errorHandler);
 
-// ─── DB CONNECT (non-blocking) ──────────────────────────────
+// ─── STARTUP MIGRATIONS ─────────────────────────────────────
+// Updates platform-seeded agent code on every deploy so fixes
+// take effect automatically without a manual seed run.
+async function runStartupMigrations() {
+  try {
+    const BINANCE_CRYPTO_CODE = `async function run(input) {
+  const raw = (input.symbol || input.ticker || input.coin || input.name || input.input || 'ETH')
+    .toUpperCase().trim();
+  const nameToSymbol = {
+    BITCOIN:'BTC',ETHEREUM:'ETH',SOLANA:'SOL',BINANCECOIN:'BNB',RIPPLE:'XRP',
+    CARDANO:'ADA',DOGECOIN:'DOGE',AVALANCHE:'AVAX',POLKADOT:'DOT',CHAINLINK:'LINK',
+    POLYGON:'MATIC',POL:'MATIC',UNISWAP:'UNI',COSMOS:'ATOM',LITECOIN:'LTC',
+    ARBITRUM:'ARB',OPTIMISM:'OP',APTOS:'APT',NEAR:'NEAR',SUI:'SUI',
+    OKB:'OKB',TONCOIN:'TON',PEPE:'PEPE',SHIBA:'SHIB',SHIBAINU:'SHIB',
+  };
+  const symbol = nameToSymbol[raw] || raw;
+  const pair   = symbol + 'USDT';
+  const resp   = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=' + pair);
+  if (!resp.ok) {
+    if (resp.status === 400) return { error: 'Coin not found: ' + symbol, hint: 'Try: BTC, ETH, SOL, BNB, XRP, ADA, DOGE, AVAX, DOT, LINK, MATIC, ARB, OP, APT, NEAR, SUI, TON' };
+    throw new Error('Binance API error: ' + resp.status);
+  }
+  const d = await resp.json();
+  const price = parseFloat(d.lastPrice);
+  const change = parseFloat(d.priceChangePercent);
+  return {
+    symbol, pair,
+    priceUsd:  parseFloat(price.toFixed(price < 1 ? 8 : 2)),
+    change24h: parseFloat(change.toFixed(2)),
+    direction: change >= 0 ? 'up' : 'down',
+    high24h:   parseFloat(parseFloat(d.highPrice).toFixed(2)),
+    low24h:    parseFloat(parseFloat(d.lowPrice).toFixed(2)),
+    volume24h: parseFloat(parseFloat(d.quoteVolume).toFixed(0)),
+    summary:   symbol + ' is $' + price.toFixed(price < 1 ? 6 : 2) + ' (' + (change >= 0 ? '+' : '') + change.toFixed(2) + '% 24h)',
+    source: 'Binance', timestamp: new Date().toISOString(),
+  };
+}`;
+
+    const DEFI_TVL_CODE = `async function run(input) {
+  const query = (input.protocol || input.name || input.input || 'uniswap').toLowerCase().trim();
+  const resp = await fetch('https://api.llama.fi/protocol/' + query);
+  if (resp.status === 404) return { error: 'Protocol not found: ' + query, hint: 'Try: uniswap, aave, lido, compound, curve, gmx, makerdao, pancakeswap, hyperliquid' };
+  if (!resp.ok) throw new Error('DeFiLlama API error: ' + resp.status);
+  const d = await resp.json();
+  const currentTvl = d.currentChainTvls ? Object.values(d.currentChainTvls).reduce((a, b) => a + b, 0) : (d.tvl && d.tvl.length ? d.tvl[d.tvl.length-1].totalLiquidityUSD : 0);
+  const prevTvl = d.tvl && d.tvl.length > 1 ? d.tvl[d.tvl.length-2].totalLiquidityUSD : null;
+  const change24h = prevTvl ? parseFloat(((currentTvl - prevTvl) / prevTvl * 100).toFixed(2)) : null;
+  const topChains = d.currentChainTvls ? Object.entries(d.currentChainTvls).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([chain,tvl])=>({chain,tvlUsd:parseFloat(tvl.toFixed(0))})) : [];
+  const fmt = currentTvl >= 1e9 ? '$' + (currentTvl/1e9).toFixed(2) + 'B' : '$' + (currentTvl/1e6).toFixed(1) + 'M';
+  return { name: d.name, slug: query, category: d.category||null, chains: d.chains||[], tvlUsd: parseFloat(currentTvl.toFixed(2)), tvlFormatted: fmt, change24h, topChains, summary: (d.name||query) + ' TVL is ' + fmt + (change24h!==null?' ('+(change24h>=0?'+':'')+change24h+'% 24h)':''), source: 'DeFiLlama', timestamp: new Date().toISOString() };
+}`;
+
+    const FOREX_CODE = `async function run(input) {
+  const from = (input.from || input.base || 'USD').toUpperCase().trim();
+  const to   = (input.to || input.target || 'EUR').toUpperCase().trim();
+  const amount = parseFloat(input.amount || '1');
+  if (isNaN(amount) || amount <= 0) return { error: 'amount must be a positive number', example: { from:'USD', to:'EUR', amount:100 } };
+  const resp = await fetch('https://api.frankfurter.app/latest?from=' + from);
+  if (!resp.ok) throw new Error('Exchange rate API error: ' + resp.status);
+  const data = await resp.json();
+  if (!data.rates) return { error: 'Currency not found: ' + from, hint: 'Supported: USD, EUR, GBP, JPY, AUD, CAD, CHF, CNY, KRW, INR, BRL, MXN, SGD, HKD, NOK, SEK, DKK, NZD, ZAR, TRY' };
+  if (to && to !== from && data.rates[to] !== undefined) {
+    const rate = data.rates[to];
+    const converted = parseFloat((amount * rate).toFixed(4));
+    return { from, to, rate: parseFloat(rate.toFixed(6)), amount, result: converted, summary: amount + ' ' + from + ' = ' + converted + ' ' + to, date: data.date, source: 'Frankfurter ECB' };
+  }
+  const topRates = ['EUR','GBP','JPY','AUD','CAD','CHF','CNY','KRW','INR','BRL'].filter(c=>c!==from&&data.rates[c]).reduce((acc,c)=>{acc[c]=parseFloat((amount*data.rates[c]).toFixed(4));return acc;},{});
+  return { base: from, amount, rates: topRates, date: data.date, summary: amount + ' ' + from + ' converted to top currencies', source: 'Frankfurter ECB' };
+}`;
+
+    const migrations = [
+      { slug: 'crypto-price-checker',  code: BINANCE_CRYPTO_CODE },
+      { slug: 'defi-tvl-checker',      code: DEFI_TVL_CODE       },
+      { slug: 'currency-exchange-rate', code: FOREX_CODE          },
+    ];
+
+    for (const m of migrations) {
+      const updated = await prisma.agent.updateMany({
+        where: { slug: m.slug },
+        data:  { code: m.code },
+      });
+      if (updated.count > 0) console.log(`[migration] updated agent code: ${m.slug}`);
+    }
+    console.log('[migration] startup migrations complete');
+  } catch (err: any) {
+    console.error('[migration] startup migration error (non-fatal):', err?.message);
+  }
+}
+
+// ─── DB CONNECT + STARTUP MIGRATIONS ───────────────────────
 console.log('[app] connecting to database...');
 prisma.$connect()
-  .then(() => console.log('[app] database connected'))
+  .then(async () => {
+    console.log('[app] database connected');
+    await runStartupMigrations();
+  })
   .catch((err) => console.error('[app] database connect failed (non-fatal):', err?.message || err));
 
 // ─── EXPORT for start.js ────────────────────────────────────

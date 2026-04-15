@@ -3,103 +3,112 @@
  *
  * Executes platform-hosted agent code in an isolated Node vm context.
  *
- * Key design decision: we do NOT use globalThis.fetch inside safeFetch.
- * Node's native fetch (undici) throws "fetch failed" on many Railway/Docker
- * environments due to SSL / network-stack issues. Instead we use axios,
- * which relies on Node's battle-tested http/https modules and works
- * reliably in every hosted environment.
- *
- * The safeFetch wrapper runs entirely in the OUTER context and returns a
- * plain JS object into the sandbox — no native V8-bound objects ever
- * cross the vm context boundary.
+ * Network strategy:
+ *  - axios with forced IPv4 (Railway containers can fail IPv6 DNS)
+ *  - 3 automatic retries with exponential backoff for transient failures
+ *  - 10-second per-request timeout
+ *  - All I/O runs in outer context; VM only receives plain JS objects
  */
 
 import vm    from 'vm';
 import axios from 'axios';
+import https from 'https';
+import http  from 'http';
 
 const EXEC_TIMEOUT_MS  = 25_000;
-const FETCH_TIMEOUT_MS = 12_000;
+const FETCH_TIMEOUT_MS = 10_000;
+const MAX_RETRIES      = 3;
 
-function makeSafeFetch() {
-  return async function safeFetch(
-    url:  string,
-    init?: Record<string, unknown>
-  ): Promise<{
-    ok: boolean; status: number; statusText: string;
-    headers: { get: (k: string) => string | null; has: (k: string) => boolean };
-    text: () => Promise<string>;
-    json: () => Promise<unknown>;
-  }> {
-    if (!url || typeof url !== 'string') {
-      throw new Error('fetch: url must be a non-empty string');
-    }
+// Force IPv4 to prevent Railway/Docker IPv6 DNS failures (ENOTFOUND / EAI_AGAIN)
+const httpsAgent = new https.Agent({ family: 4, keepAlive: true });
+const httpAgent  = new http.Agent ({  family: 4, keepAlive: true });
 
-    // Build axios-compatible options from the fetch-style init object
-    const method  = ((init?.method as string) || 'GET').toUpperCase();
-    const headers = (init?.headers as Record<string, string>) || {};
-    const body    = init?.body;
+async function fetchWithRetry(
+  url: string,
+  init: Record<string, unknown>
+): Promise<{ status: number; statusText: string; bodyText: string; headers: Record<string, string> }> {
 
-    console.log(`[runner] fetch → ${method} ${url}`);
+  const method  = ((init.method as string) || 'GET').toUpperCase();
+  const headers = (init.headers as Record<string, string>) || {};
+  const body    = init.body;
 
-    let bodyText: string;
-    let status:   number;
-    let statusText: string;
-    let resHeaders: Record<string, string>;
+  let lastErr: Error = new Error('Unknown error');
 
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
+      console.log(`[runner] fetch attempt ${attempt}/${MAX_RETRIES} → ${method} ${url}`);
+
       const response = await axios.request<string>({
         url,
-        method:          method as any,
-        headers:         { 'Accept': 'application/json', ...headers },
-        data:            body,
-        timeout:         FETCH_TIMEOUT_MS,
-        responseType:    'text',          // always get raw text so we control parsing
-        validateStatus:  () => true,      // never throw on HTTP error status
-        maxRedirects:    5,
+        method:         method as any,
+        headers:        { Accept: 'application/json, text/plain', ...headers },
+        data:           body,
+        timeout:        FETCH_TIMEOUT_MS,
+        responseType:   'text',
+        validateStatus: () => true,   // never throw on HTTP status codes
+        maxRedirects:   5,
+        httpsAgent,
+        httpAgent,
       });
 
-      bodyText   = response.data as string;
-      status     = response.status;
-      statusText = response.statusText;
-      resHeaders = Object.fromEntries(
+      const bodyText   = response.data as string;
+      const resHeaders = Object.fromEntries(
         Object.entries(response.headers).map(([k, v]) => [k, String(v)])
       );
 
-      console.log(`[runner] fetch ← ${status} ${url} (${bodyText.length} bytes)`);
+      console.log(`[runner] fetch ← ${response.status} ${url} (${bodyText.length}b)`);
+      return { status: response.status, statusText: response.statusText, bodyText, headers: resHeaders };
+
     } catch (err: any) {
-      // axios throws only on network-level failures (timeout, DNS, refused)
-      const msg = err?.code === 'ECONNABORTED'
-        ? `fetch timed out after ${FETCH_TIMEOUT_MS / 1000}s: ${url}`
-        : err?.code === 'ECONNREFUSED'
-          ? `fetch: connection refused: ${url}`
-          : err?.code === 'ENOTFOUND'
-            ? `fetch: DNS lookup failed: ${url}`
-            : `fetch: ${err?.message || String(err)}`;
+      lastErr = err;
 
-      console.error('[runner] fetch network error:', msg);
-      throw new Error(msg);
+      const code    = err?.code || '';
+      const isRetry = ['ECONNRESET','ECONNABORTED','ETIMEDOUT','ENOTFOUND','EAI_AGAIN','ENETUNREACH'].includes(code);
+
+      console.error(`[runner] fetch error attempt ${attempt}: ${code} — ${err?.message}`);
+
+      if (!isRetry || attempt === MAX_RETRIES) break;
+
+      // Exponential back-off: 300ms, 900ms
+      await new Promise(r => setTimeout(r, 300 * attempt));
     }
+  }
 
-    const ok = status >= 200 && status < 300;
+  // Translate raw network codes into human-readable messages
+  const code = (lastErr as any)?.code || '';
+  if (code === 'ENOTFOUND' || code === 'EAI_AGAIN') {
+    throw new Error(`External API unreachable (DNS): ${url} — please try again in a moment`);
+  }
+  if (code === 'ECONNABORTED' || code === 'ETIMEDOUT') {
+    throw new Error(`External API timed out after ${FETCH_TIMEOUT_MS / 1000}s: ${url}`);
+  }
+  if (code === 'ECONNREFUSED') {
+    throw new Error(`External API refused connection: ${url}`);
+  }
+  throw new Error(`fetch: ${lastErr?.message || String(lastErr)}`);
+}
 
-    // Return a plain object — safe to hand into the VM sandbox
+function makeSafeFetch() {
+  return async function safeFetch(
+    url:   string,
+    init?: Record<string, unknown>
+  ) {
+    if (!url || typeof url !== 'string') throw new Error('fetch: url must be a non-empty string');
+
+    const { status, statusText, bodyText, headers } = await fetchWithRetry(url, init || {});
+
     return {
-      ok,
+      ok:         status >= 200 && status < 300,
       status,
       statusText,
       headers: {
-        get: (key: string) => resHeaders[key.toLowerCase()] ?? null,
-        has: (key: string) => key.toLowerCase() in resHeaders,
+        get: (k: string) => headers[k.toLowerCase()] ?? null,
+        has: (k: string) => k.toLowerCase() in headers,
       },
       text: async () => bodyText,
       json: async () => {
-        try {
-          return JSON.parse(bodyText);
-        } catch {
-          throw new Error(
-            `fetch: response is not valid JSON (status ${status}): ${bodyText.slice(0, 300)}`
-          );
-        }
+        try   { return JSON.parse(bodyText); }
+        catch { throw new Error(`Response not valid JSON (status ${status}): ${bodyText.slice(0, 300)}`); }
       },
     };
   };
@@ -112,57 +121,29 @@ export async function runAgentCode(
 
   const sandbox: Record<string, unknown> = {
     input,
-    result: undefined,
-
-    // Network — axios-backed, runs entirely outside VM context
-    fetch: makeSafeFetch(),
-
-    // Console — proxied to outer process (visible in Railway logs)
+    result:  undefined,
+    fetch:   makeSafeFetch(),
     console: {
       log:   (...a: unknown[]) => console.log('[agent]',   ...a),
       error: (...a: unknown[]) => console.error('[agent]', ...a),
       warn:  (...a: unknown[]) => console.warn('[agent]',  ...a),
       info:  (...a: unknown[]) => console.info('[agent]',  ...a),
     },
-
-    // Promise MUST be in the sandbox for async/await to resolve in VM
-    Promise,
-
-    // Standard globals
-    JSON,
-    Math,
-    Date,
-    parseFloat,
-    parseInt,
-    isNaN,
-    isFinite,
-    Array,
-    Object,
-    String,
-    Number,
-    Boolean,
-    Error,
-    TypeError,
-    RangeError,
-    RegExp,
-    Map,
-    Set,
-    encodeURIComponent,
-    decodeURIComponent,
-
-    // Timers — capped so agents can't stall forever
+    Promise,          // required for async/await inside VM
+    JSON, Math, Date,
+    parseFloat, parseInt, isNaN, isFinite,
+    Array, Object, String, Number, Boolean,
+    Error, TypeError, RangeError, RegExp,
+    Map, Set,
+    encodeURIComponent, decodeURIComponent,
     setTimeout:  (fn: () => void, ms: number) => setTimeout(fn, Math.min(ms, 10_000)),
     clearTimeout,
   };
 
-  // Builder writes `async function run(input) { ... }`
-  // We wrap and call it, capturing the return value in `result`
   const wrapped = `
 (async () => {
   ${code}
-  if (typeof run !== 'function') {
-    throw new Error('Agent must define: async function run(input) { ... }');
-  }
+  if (typeof run !== 'function') throw new Error('Agent must define: async function run(input) { ... }');
   result = await run(input);
 })();
 `.trim();
@@ -171,29 +152,21 @@ export async function runAgentCode(
 
   let execPromise: Promise<void>;
   try {
-    const script = new vm.Script(wrapped, { filename: 'agent.js' });
-    // No { timeout } here — vm timeout only covers synchronous work and
-    // fires false positives for async agents. Use Promise.race instead.
-    execPromise = script.runInContext(context) as Promise<void>;
+    execPromise = new vm.Script(wrapped, { filename: 'agent.js' }).runInContext(context) as Promise<void>;
   } catch (syncErr: any) {
-    console.error('[runner] Agent compile/syntax error:', syncErr?.message);
-    throw new Error(`Agent syntax error: ${syncErr?.message || String(syncErr)}`);
+    console.error('[runner] compile error:', syncErr?.message);
+    throw new Error(`Agent syntax error: ${syncErr?.message}`);
   }
 
-  const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(
-      () => reject(new Error(`Agent timed out after ${EXEC_TIMEOUT_MS / 1000}s`)),
-      EXEC_TIMEOUT_MS
-    )
-  );
-
-  try {
-    await Promise.race([execPromise, timeoutPromise]);
-  } catch (err: any) {
-    console.error('[runner] Agent runtime error:', err?.message);
-    // Re-throw without double-wrapping
+  await Promise.race([
+    execPromise,
+    new Promise<never>((_, rej) =>
+      setTimeout(() => rej(new Error(`Agent timed out after ${EXEC_TIMEOUT_MS / 1000}s`)), EXEC_TIMEOUT_MS)
+    ),
+  ]).catch(err => {
+    console.error('[runner] execution error:', err?.message);
     throw err;
-  }
+  });
 
   return sandbox.result;
 }

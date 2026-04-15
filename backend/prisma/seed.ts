@@ -9,62 +9,55 @@ const prisma = new PrismaClient();
 
 const OWNER_WALLET = process.env.SEED_OWNER_WALLET || '0x0000000000000000000000000000000000000001';
 
-// ── Agent 1: Crypto Price Checker (uses CoinCap — no rate limits) ─────────────
+// ── Agent 1: Crypto Price Checker (Binance — major exchange, reliable DNS) ─────
 const CRYPTO_PRICE_CODE = `
 async function run(input) {
-  // Accept any of these input keys: symbol, ticker, coin, name, input
-  const raw = (input.symbol || input.ticker || input.coin || input.name || input.input || 'bitcoin').toLowerCase().trim();
+  // Accept symbol, ticker, coin, name, or input key
+  const raw = (input.symbol || input.ticker || input.coin || input.name || input.input || 'ETH')
+    .toUpperCase().trim();
 
-  const idMap = {
-    btc: 'bitcoin', bitcoin: 'bitcoin',
-    eth: 'ethereum', ethereum: 'ethereum',
-    sol: 'solana', solana: 'solana',
-    okb: 'okb',
-    bnb: 'binance-coin', binance: 'binance-coin',
-    usdc: 'usd-coin',
-    xrp: 'xrp', ripple: 'xrp',
-    ada: 'cardano', cardano: 'cardano',
-    doge: 'dogecoin', dogecoin: 'dogecoin',
-    avax: 'avalanche', avalanche: 'avalanche',
-    dot: 'polkadot', polkadot: 'polkadot',
-    link: 'chainlink', chainlink: 'chainlink',
-    matic: 'polygon', pol: 'polygon', polygon: 'polygon',
-    uni: 'uniswap', uniswap: 'uniswap',
-    atom: 'cosmos', cosmos: 'cosmos',
-    ltc: 'litecoin', litecoin: 'litecoin',
-    near: 'near-protocol',
-    arb: 'arbitrum', arbitrum: 'arbitrum',
-    op: 'optimism', optimism: 'optimism',
-    apt: 'aptos', aptos: 'aptos',
-    sui: 'sui',
+  // Normalize full names to ticker symbols
+  const nameToSymbol = {
+    BITCOIN: 'BTC', ETHEREUM: 'ETH', SOLANA: 'SOL',
+    BINANCECOIN: 'BNB', RIPPLE: 'XRP', CARDANO: 'ADA',
+    DOGECOIN: 'DOGE', AVALANCHE: 'AVAX', POLKADOT: 'DOT',
+    CHAINLINK: 'LINK', POLYGON: 'MATIC', POL: 'MATIC',
+    UNISWAP: 'UNI', COSMOS: 'ATOM', LITECOIN: 'LTC',
+    ARBITRUM: 'ARB', OPTIMISM: 'OP', APTOS: 'APT',
+    NEAR: 'NEAR', SUI: 'SUI', OKB: 'OKB', TONCOIN: 'TON',
+    PEPE: 'PEPE', SHIBA: 'SHIB', SHIBAINU: 'SHIB',
   };
+  const symbol = nameToSymbol[raw] || raw;
+  const pair   = symbol + 'USDT';
 
-  const assetId = idMap[raw] || raw;
+  const resp = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=' + pair);
 
-  const resp = await fetch('https://api.coincap.io/v2/assets/' + assetId);
-  if (!resp.ok) throw new Error('Price API error: ' + resp.status);
-  const json = await resp.json();
-
-  if (!json.data) {
-    return { error: 'Coin not found: ' + raw, hint: 'Try: BTC, ETH, SOL, BNB, XRP, ADA, DOGE, AVAX, DOT, LINK' };
+  if (!resp.ok) {
+    if (resp.status === 400) {
+      return {
+        error: 'Coin not found: ' + symbol,
+        hint:  'Supported: BTC, ETH, SOL, BNB, XRP, ADA, DOGE, AVAX, DOT, LINK, MATIC, UNI, ATOM, LTC, ARB, OP, APT, NEAR, SUI, TON, PEPE, SHIB',
+      };
+    }
+    throw new Error('Binance API error: ' + resp.status);
   }
 
-  const d = json.data;
-  const price    = parseFloat(d.priceUsd);
-  const change   = parseFloat(d.changePercent24Hr || '0');
-  const mcap     = d.marketCapUsd ? parseFloat(d.marketCapUsd) : null;
+  const d      = await resp.json();
+  const price  = parseFloat(d.lastPrice);
+  const change = parseFloat(d.priceChangePercent);
 
   return {
-    symbol:      (d.symbol || raw).toUpperCase(),
-    name:         d.name,
-    priceUsd:     parseFloat(price.toFixed(price < 1 ? 8 : 2)),
-    change24h:    parseFloat(change.toFixed(2)),
-    direction:    change >= 0 ? 'up' : 'down',
-    marketCapUsd: mcap ? parseFloat(mcap.toFixed(0)) : null,
-    rank:         d.rank ? parseInt(d.rank) : null,
-    summary:      d.name + ' is $' + price.toFixed(price < 1 ? 6 : 2) + ' (' + (change >= 0 ? '+' : '') + change.toFixed(2) + '% 24h)',
-    source:      'CoinCap',
-    timestamp:    new Date().toISOString(),
+    symbol,
+    pair,
+    priceUsd:    parseFloat(price.toFixed(price < 1 ? 8 : 2)),
+    change24h:   parseFloat(change.toFixed(2)),
+    direction:   change >= 0 ? 'up' : 'down',
+    high24h:     parseFloat(parseFloat(d.highPrice).toFixed(2)),
+    low24h:      parseFloat(parseFloat(d.lowPrice).toFixed(2)),
+    volume24h:   parseFloat(parseFloat(d.quoteVolume).toFixed(0)),
+    summary:     symbol + ' is $' + price.toFixed(price < 1 ? 6 : 2) + ' (' + (change >= 0 ? '+' : '') + change.toFixed(2) + '% 24h)',
+    source:     'Binance',
+    timestamp:   new Date().toISOString(),
   };
 }
 `.trim();
