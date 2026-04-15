@@ -21,6 +21,11 @@ console.log('[app] all routes loaded');
 
 const app = express();
 
+// ─── BIGINT SERIALIZATION ───────────────────────────────────
+// Prisma returns BigInt for totalCalls etc. JSON.stringify can't handle
+// BigInt natively — patch the prototype so res.json() works everywhere.
+(BigInt.prototype as any).toJSON = function () { return this.toString(); };
+
 // ─── SECURITY ───────────────────────────────────────────────
 app.use(helmet());
 app.use(cors({
