@@ -1,44 +1,39 @@
 const express = require('express');
+const axios   = require('axios');
+
 const app = express();
 app.use(express.json());
 
 // Health check
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.json({ status: 'ok', agent: 'Crypto Price Checker' });
 });
 
-// Main agent endpoint — AgentMarket calls this
+// Main agent endpoint
 app.post('/run', async (req, res) => {
   try {
-    // Accept coin from multiple common field names callers might use
     const rawCoin     = req.body?.coin ?? req.body?.input ?? req.body?.symbol ?? req.body?.token ?? null;
     const rawCurrency = req.body?.currency ?? 'usd';
 
-    // Strict required check
     if (!rawCoin || typeof rawCoin !== 'string' || !rawCoin.trim()) {
       return res.status(400).json({
         error:   'Missing required parameter: coin',
-        message: 'Provide a coin name in the payload. Example: {"coin": "bitcoin"}',
+        message: 'Provide a coin name in the payload.',
         example: { coin: 'bitcoin', currency: 'usd' },
       });
     }
 
-    const coinId  = rawCoin.trim().toLowerCase().replace(/\s+/g, '-');
-    const currency = (typeof rawCurrency === 'string' ? rawCurrency : 'usd').trim().toLowerCase();
+    const coinId   = rawCoin.trim().toLowerCase().replace(/\s+/g, '-');
+    const currency = (typeof rawCurrency === 'string' ? rawCurrency.trim().toLowerCase() : 'usd');
 
     const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=${currency}&include_24hr_change=true&include_market_cap=true`;
 
-    const response = await fetch(url);
-    if (!response.ok) {
-      return res.status(502).json({ error: `CoinGecko API error: ${response.status}` });
-    }
+    const { data } = await axios.get(url, { timeout: 10000 });
 
-    const data = await response.json();
-
-    if (!data[coinId] || !data[coinId][currency]) {
+    if (!data[coinId] || data[coinId][currency] === undefined) {
       return res.status(404).json({
         error:    `Coin "${coinId}" not found or not priced in "${currency}".`,
-        hint:     'Use the CoinGecko ID e.g. bitcoin, ethereum, solana, okb, cardano, chainlink',
+        hint:     'Use the CoinGecko ID e.g. bitcoin, ethereum, solana, okb, cardano',
         received: coinId,
       });
     }
@@ -63,4 +58,6 @@ app.post('/run', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Crypto Price Agent running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Crypto Price Agent running on port ${PORT}`);
+});
