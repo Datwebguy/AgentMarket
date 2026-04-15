@@ -47,7 +47,9 @@ export default function DeployPage() {
       setResult(data);
       setStep('done');
     } catch (err: any) {
-      setErrMsg(err?.response?.data?.error || err.message || 'Deployment failed');
+      const detail = err?.response?.data?.detail ? ` — ${err.response.data.detail}` : '';
+      const validationDetails = err?.response?.data?.details ? ` — ${JSON.stringify(err.response.data.details)}` : '';
+      setErrMsg((err?.response?.data?.error || err.message || 'Deployment failed') + detail + validationDetails);
       setStep('error');
     }
   }

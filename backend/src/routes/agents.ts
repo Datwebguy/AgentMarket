@@ -194,7 +194,7 @@ agentsRouter.post('/', authenticate, async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Validation failed', details: err.errors });
     }
     console.error('Deploy error:', err);
-    return res.status(500).json({ error: 'Failed to deploy agent' });
+    return res.status(500).json({ error: 'Failed to deploy agent', detail: (err as any)?.message || String(err) });
   }
 });
 
