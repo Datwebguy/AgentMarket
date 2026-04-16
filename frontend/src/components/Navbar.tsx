@@ -1,7 +1,7 @@
 'use client';
 
 import { useAccount, useConnect, useDisconnect, useSignMessage, useSwitchChain } from 'wagmi';
-import { injected } from 'wagmi/connectors';
+import { injected, walletConnect } from 'wagmi/connectors';
 import { SiweMessage } from 'siwe';
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
@@ -26,9 +26,10 @@ export function Navbar() {
   const { switchChainAsync } = useSwitchChain();
   const { token, user, login, logout } = useAuthStore();
 
-  const [signing,     setSigning]     = useState(false);
-  const [menuOpen,    setMenuOpen]    = useState(false);
-  const [mobileOpen,  setMobileOpen]  = useState(false);
+  const [signing,      setSigning]      = useState(false);
+  const [menuOpen,     setMenuOpen]     = useState(false);
+  const [mobileOpen,   setMobileOpen]   = useState(false);
+  const [walletPicker, setWalletPicker] = useState(false);
 
   useEffect(() => {
     if (token && !user) {
@@ -36,15 +37,19 @@ export function Navbar() {
     }
   }, [token]);
 
-  async function handleConnect() {
+  const hasInjected = typeof window !== 'undefined' && !!(window as any).ethereum;
+  const hasWC       = !!process.env.NEXT_PUBLIC_WC_PROJECT_ID;
+
+  async function connectWith(connectorFn: any) {
     try {
       setSigning(true);
       setMobileOpen(false);
+      setWalletPicker(false);
       try { await switchToXLayer(); } catch { /* ignore */ }
-      const result       = await connectAsync({ connector: injected(), chainId: CHAIN_ID });
+      const result        = await connectAsync({ connector: connectorFn, chainId: CHAIN_ID });
       const walletAddress = result.accounts[0];
-      const nonce        = await api.getNonce();
-      const message      = new SiweMessage({
+      const nonce         = await api.getNonce();
+      const message       = new SiweMessage({
         domain:    window.location.host,
         address:   walletAddress,
         statement: 'Sign in to AgentMarket. This will not trigger a blockchain transaction or cost gas.',
@@ -61,6 +66,19 @@ export function Navbar() {
       console.error('Sign-in failed:', err);
     } finally {
       setSigning(false);
+    }
+  }
+
+  function handleConnect() {
+    // If only one option available, connect directly
+    if (hasWC && !hasInjected) {
+      connectWith(walletConnect({ projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID! }));
+    } else if (!hasWC && hasInjected) {
+      connectWith(injected());
+    } else {
+      // Show picker
+      setWalletPicker(true);
+      setMobileOpen(false);
     }
   }
 
@@ -420,6 +438,75 @@ export function Navbar() {
                 {signing ? 'Connecting…' : 'Connect Wallet'}
               </button>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── WALLET PICKER MODAL ─────────────────────────────── */}
+      {walletPicker && (
+        <div onClick={() => setWalletPicker(false)} style={{
+          position: 'fixed', inset: 0, top: 0, left: 0, right: 0, bottom: 0,
+          zIndex: 999, background: 'rgba(0,0,0,0.8)',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          fontFamily: "'Figtree', sans-serif",
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            width: '100%', maxWidth: 420,
+            background: '#111', borderRadius: '20px 20px 0 0',
+            border: '1px solid rgba(255,255,255,0.1)',
+            padding: '24px 20px 36px',
+          }}>
+            {/* Handle */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+              <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.15)' }} />
+            </div>
+
+            <h3 style={{ fontSize: 17, fontWeight: 900, margin: '0 0 6px', color: '#fff', textAlign: 'center' }}>
+              Connect Wallet
+            </h3>
+            <p style={{ fontSize: 13, color: '#555', textAlign: 'center', margin: '0 0 24px' }}>
+              Choose how you want to connect
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {hasInjected && (
+                <button onClick={() => connectWith(injected())} style={{
+                  width: '100%', padding: '16px', borderRadius: 14, fontSize: 15, fontWeight: 700,
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                  gap: 14, fontFamily: 'inherit', textAlign: 'left',
+                }}>
+                  <span style={{ fontSize: 28 }}>🦊</span>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700 }}>MetaMask</div>
+                    <div style={{ fontSize: 12, color: '#666', fontWeight: 400 }}>Use your browser wallet</div>
+                  </div>
+                </button>
+              )}
+
+              {hasWC && (
+                <button onClick={() => connectWith(walletConnect({ projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID! }))} style={{
+                  width: '100%', padding: '16px', borderRadius: 14, fontSize: 15, fontWeight: 700,
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                  gap: 14, fontFamily: 'inherit', textAlign: 'left',
+                }}>
+                  <span style={{ fontSize: 28 }}>🔗</span>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 700 }}>WalletConnect</div>
+                    <div style={{ fontSize: 12, color: '#666', fontWeight: 400 }}>Scan QR or use mobile wallet</div>
+                  </div>
+                </button>
+              )}
+
+              <button onClick={() => setWalletPicker(false)} style={{
+                width: '100%', padding: '13px', borderRadius: 12, fontSize: 14, fontWeight: 600,
+                background: 'transparent', border: '1px solid rgba(255,255,255,0.07)',
+                color: '#555', cursor: 'pointer', fontFamily: 'inherit', marginTop: 4,
+              }}>
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

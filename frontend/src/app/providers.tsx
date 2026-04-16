@@ -44,13 +44,18 @@ const xLayerTestnet = defineChain({
   },
 });
 
+const connectors = [injected()];
+
+// Enable WalletConnect if project ID is configured
+if (process.env.NEXT_PUBLIC_WC_PROJECT_ID) {
+  connectors.push(
+    walletConnect({ projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID }) as any
+  );
+}
+
 const wagmiConfig = createConfig({
   chains:     [xLayer, xLayerTestnet, mainnet],
-  connectors: [
-    injected(),
-    // Add WalletConnect if you have a project ID:
-    // walletConnect({ projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID! }),
-  ],
+  connectors,
   transports: {
     [xLayer.id]:        http(),
     [xLayerTestnet.id]: http(),
