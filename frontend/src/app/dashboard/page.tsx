@@ -188,12 +188,12 @@ export default function DashboardPage() {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {user?.agents?.map(agent => (
-                <div key={agent.id} style={{ background: '#101010', border: '1px solid rgba(255,255,255,.06)', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-                  <div>
-                    <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 2 }}>{agent.name}</div>
-                    <div style={{ fontSize: 11, color: '#555', fontFamily: 'monospace' }}>{agent.category}</div>
+                <div key={agent.id} className="dash-agent-row" style={{ background: '#101010', border: '1px solid rgba(255,255,255,.06)', borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 800, fontSize: 15, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{agent.name}</div>
+                    <div style={{ fontSize: 11, color: '#555', fontFamily: 'monospace' }}>{agent.category} · {agent.status}</div>
                   </div>
-                  <div style={{ display: 'flex', gap: 24 }}>
+                  <div className="dash-agent-stats" style={{ display: 'flex', gap: 24 }}>
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ fontWeight: 700, fontSize: 16, color: '#00d4a0' }}>${parseFloat(agent.totalRevenueUsdc?.toString() || '0').toFixed(4)}</div>
                       <div style={{ fontSize: 10, color: '#555' }}>EARNED</div>
@@ -203,7 +203,7 @@ export default function DashboardPage() {
                       <div style={{ fontSize: 10, color: '#555' }}>CALLS</div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <div className="dash-agent-actions" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                     <button onClick={() => setEditingAgent(agent)} style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 6, padding: '5px 14px', color: '#ccc', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Edit</button>
                     <a href={`/marketplace/${agent.slug}`} style={{ fontSize: 12, color: '#f97316', fontWeight: 600 }}>View →</a>
                   </div>
@@ -253,7 +253,44 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
-    </main>
+    <style>{`
+      /* ── Dashboard mobile ───────────────────── */
+      @media (max-width: 767px) {
+        .dash-header  { padding: 14px 16px !important; }
+        .dash-body    { padding: 24px 16px 60px !important; }
+
+        /* 4-col stat strip → 2×2 */
+        .dash-stat-strip { grid-template-columns: repeat(2,1fr) !important; }
+
+        /* Hide desktop calls table header on mobile */
+        .dash-calls-header { display: none !important; }
+
+        /* Stack calls row on mobile */
+        .dash-calls-row {
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 4px !important;
+          padding: 12px 14px !important;
+          align-items: flex-start !important;
+        }
+
+        /* My Agents row — stack on mobile */
+        .dash-agent-row {
+          flex-direction: column !important;
+          align-items: flex-start !important;
+          gap: 10px !important;
+        }
+        .dash-agent-row .dash-agent-stats {
+          flex-direction: row !important;
+          width: 100% !important;
+          justify-content: flex-start !important;
+        }
+        .dash-agent-row .dash-agent-actions {
+          width: 100% !important;
+          justify-content: flex-end !important;
+        }
+      }
+    `}</style>
 
     {editingAgent && (
       <EditAgentModal

@@ -454,6 +454,9 @@ export default function MarketplacePage() {
       <style>{`
         @media (max-width: 600px) {
           .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
+          .stats-grid > div { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.07); }
+          .stats-grid > div:nth-child(even) { border-right: none !important; }
+          .stats-grid > div:nth-child(odd)  { border-right: 1px solid rgba(255,255,255,0.07) !important; }
         }
       `}</style>
     </>

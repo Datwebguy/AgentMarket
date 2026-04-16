@@ -168,7 +168,7 @@ export default function DeployPage() {
       <main style={{ minHeight: '100vh', background: '#080808', color: '#fff', fontFamily: FONT }}>
 
         {/* Header */}
-        <div style={{ padding: '24px 32px 20px', borderBottom: '1px solid rgba(255,255,255,.06)' }}>
+        <div className="deploy-header" style={{ padding: '24px 32px 20px', borderBottom: '1px solid rgba(255,255,255,.06)' }}>
           <div style={{ maxWidth: 780, margin: '0 auto' }}>
             <a href="/marketplace" style={{ fontSize: 13, color: '#666', textDecoration: 'none' }}>← Marketplace</a>
             <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-0.5px', margin: '8px 0 4px', color: '#fff' }}>Deploy an Agent</h1>
@@ -178,7 +178,7 @@ export default function DeployPage() {
           </div>
         </div>
 
-        <div style={{ maxWidth: 780, margin: '0 auto', padding: '32px 32px 60px' }}>
+        <div className="deploy-body" style={{ maxWidth: 780, margin: '0 auto', padding: '32px 32px 60px' }}>
 
           {/* Auth warning */}
           {(!isConnected || !token) && step === 'form' && (
@@ -402,7 +402,9 @@ export default function DeployPage() {
 
       <style>{`
         @media (max-width: 640px) {
-          .two-col-grid { grid-template-columns: 1fr !important; }
+          .deploy-header { padding: 16px 16px 16px !important; }
+          .deploy-body   { padding: 20px 16px 60px !important; }
+          .two-col-grid  { grid-template-columns: 1fr !important; }
           .template-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
       `}</style>

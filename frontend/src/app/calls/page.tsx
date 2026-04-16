@@ -202,7 +202,7 @@ export default function CallsPage() {
       <main style={{ minHeight: '100vh', background: '#080808', color: '#fff', fontFamily: FONT }}>
 
         {/* Header */}
-        <div style={{
+        <div className="calls-header" style={{
           maxWidth: 900, margin: '0 auto', padding: '40px 32px 16px',
           borderBottom: '1px solid rgba(255,255,255,.06)',
           display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16,
@@ -223,7 +223,7 @@ export default function CallsPage() {
         </div>
 
         {/* Content */}
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '24px 32px 80px' }}>
+        <div className="calls-content" style={{ maxWidth: 900, margin: '0 auto', padding: '24px 32px 80px' }}>
 
           {isLoading && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -289,7 +289,7 @@ export default function CallsPage() {
 
       <style>{`
         @media (max-width: 640px) {
-          .calls-header { padding: 24px 16px 16px !important; }
+          .calls-header  { padding: 24px 16px 16px !important; }
           .calls-content { padding: 16px 0 60px !important; }
         }
       `}</style>
