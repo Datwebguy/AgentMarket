@@ -40,6 +40,9 @@ export interface Agent {
     username:      string | null;
   };
   inputSchema?:     Record<string, unknown> | null;
+  code?:            string | null;
+  endpointUrl?:     string | null;
+  status?:          string;
   _count?: { reviews: number };
 }
 

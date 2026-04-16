@@ -36,10 +36,10 @@ userRouter.get('/:walletAddress', async (req: Request, res: Response) => {
         id: true, walletAddress: true, username: true, bio: true,
         createdAt: true,
         agents: {
-          where: { status: 'ACTIVE' },
           select: {
-            id: true, name: true, slug: true, category: true,
-            totalCalls: true, totalRevenueUsdc: true,
+            id: true, name: true, slug: true, category: true, status: true,
+            totalCalls: true, totalRevenueUsdc: true, pricePerCallUsdc: true,
+            description: true, code: true, endpointUrl: true,
           },
         },
       },

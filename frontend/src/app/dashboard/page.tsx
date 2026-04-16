@@ -1,12 +1,107 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
-import { api, PlatformStats } from '../../lib/api';
+import { useState } from 'react';
+import { api, PlatformStats, Agent } from '../../lib/api';
 import { Navbar } from '../../components/Navbar';
+
+function EditAgentModal({ agent, onClose, onSaved }: { agent: Agent; onClose: () => void; onSaved: () => void }) {
+  const [name, setName]         = useState(agent.name);
+  const [description, setDesc]  = useState(agent.description);
+  const [price, setPrice]       = useState(String(agent.pricePerCallUsdc ?? ''));
+  const [code, setCode]         = useState(agent.code ?? '');
+  const [endpointUrl, setUrl]   = useState(agent.endpointUrl ?? '');
+  const [status, setStatus]     = useState(agent.status ?? 'ACTIVE');
+  const [saving, setSaving]     = useState(false);
+  const [error, setError]       = useState('');
+
+  async function handleSave() {
+    setSaving(true);
+    setError('');
+    try {
+      await api.updateAgent(agent.id, {
+        name,
+        description,
+        pricePerCallUsdc: parseFloat(price),
+        ...(code        ? { code }        : {}),
+        ...(endpointUrl ? { endpointUrl } : {}),
+        status: status as any,
+      });
+      onSaved();
+      onClose();
+    } catch (e: any) {
+      setError(e?.response?.data?.error || e?.message || 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ background: '#111', border: '1px solid rgba(255,255,255,.1)', borderRadius: 16, width: '100%', maxWidth: 620, maxHeight: '90vh', overflowY: 'auto', padding: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+          <h2 style={{ fontWeight: 900, fontSize: 20, letterSpacing: '-0.5px' }}>Edit Agent</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#666', fontSize: 22, cursor: 'pointer', lineHeight: 1 }}>×</button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={{ fontSize: 11, color: '#555', fontFamily: 'monospace', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Name</label>
+            <input value={name} onChange={e => setName(e.target.value)} style={{ width: '100%', background: '#0a0a0a', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, padding: '10px 14px', color: '#fff', fontSize: 14, boxSizing: 'border-box' }} />
+          </div>
+
+          <div>
+            <label style={{ fontSize: 11, color: '#555', fontFamily: 'monospace', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Description</label>
+            <textarea value={description} onChange={e => setDesc(e.target.value)} rows={3} style={{ width: '100%', background: '#0a0a0a', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, padding: '10px 14px', color: '#fff', fontSize: 14, resize: 'vertical', boxSizing: 'border-box' }} />
+          </div>
+
+          <div>
+            <label style={{ fontSize: 11, color: '#555', fontFamily: 'monospace', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Price per call (USDC)</label>
+            <input type="number" step="0.001" value={price} onChange={e => setPrice(e.target.value)} style={{ width: '100%', background: '#0a0a0a', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, padding: '10px 14px', color: '#fff', fontSize: 14, boxSizing: 'border-box' }} />
+          </div>
+
+          <div>
+            <label style={{ fontSize: 11, color: '#555', fontFamily: 'monospace', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Status</label>
+            <select value={status} onChange={e => setStatus(e.target.value)} style={{ width: '100%', background: '#0a0a0a', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, padding: '10px 14px', color: '#fff', fontSize: 14, boxSizing: 'border-box' }}>
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="PAUSED">PAUSED</option>
+              <option value="DEPRECATED">DEPRECATED</option>
+            </select>
+          </div>
+
+          {agent.code != null && (
+            <div>
+              <label style={{ fontSize: 11, color: '#555', fontFamily: 'monospace', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Agent Code</label>
+              <textarea value={code} onChange={e => setCode(e.target.value)} rows={14} spellCheck={false} style={{ width: '100%', background: '#0a0a0a', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, padding: '10px 14px', color: '#a8ff78', fontSize: 12, fontFamily: 'monospace', resize: 'vertical', boxSizing: 'border-box' }} />
+            </div>
+          )}
+
+          {agent.endpointUrl != null && (
+            <div>
+              <label style={{ fontSize: 11, color: '#555', fontFamily: 'monospace', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Endpoint URL</label>
+              <input value={endpointUrl} onChange={e => setUrl(e.target.value)} style={{ width: '100%', background: '#0a0a0a', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, padding: '10px 14px', color: '#fff', fontSize: 14, boxSizing: 'border-box' }} />
+            </div>
+          )}
+
+          {error && <div style={{ background: 'rgba(255,68,68,.1)', border: '1px solid rgba(255,68,68,.3)', borderRadius: 8, padding: '10px 14px', color: '#ff6b6b', fontSize: 13 }}>{error}</div>}
+
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 4 }}>
+            <button onClick={onClose} style={{ background: 'none', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8, padding: '10px 20px', color: '#888', fontSize: 13, cursor: 'pointer' }}>Cancel</button>
+            <button onClick={handleSave} disabled={saving} style={{ background: '#f97316', border: 'none', borderRadius: 8, padding: '10px 24px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount();
+  const queryClient = useQueryClient();
+  const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
 
   const { data: user, isLoading: userLoading } = useQuery({
     queryKey: ['user', address],
@@ -108,7 +203,10 @@ export default function DashboardPage() {
                       <div style={{ fontSize: 10, color: '#555' }}>CALLS</div>
                     </div>
                   </div>
-                  <a href={`/marketplace/${agent.slug}`} style={{ fontSize: 12, color: '#f97316', fontWeight: 600 }}>View →</a>
+                  <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                    <button onClick={() => setEditingAgent(agent)} style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 6, padding: '5px 14px', color: '#ccc', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Edit</button>
+                    <a href={`/marketplace/${agent.slug}`} style={{ fontSize: 12, color: '#f97316', fontWeight: 600 }}>View →</a>
+                  </div>
                 </div>
               ))}
             </div>
@@ -156,6 +254,14 @@ export default function DashboardPage() {
         </div>
       </div>
     </main>
+
+    {editingAgent && (
+      <EditAgentModal
+        agent={editingAgent}
+        onClose={() => setEditingAgent(null)}
+        onSaved={() => queryClient.invalidateQueries({ queryKey: ['user', address] })}
+      />
+    )}
     </>
   );
 }
