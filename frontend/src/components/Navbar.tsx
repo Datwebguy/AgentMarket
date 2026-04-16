@@ -8,7 +8,8 @@ import { api } from '../lib/api';
 import { useAuthStore } from '../hooks/useAuthStore';
 import { switchToXLayer } from '../lib/switchToXLayer';
 
-const CHAIN_ID = parseInt(process.env.NEXT_PUBLIC_X_LAYER_CHAIN_ID || '196');
+const CHAIN_ID     = parseInt(process.env.NEXT_PUBLIC_X_LAYER_CHAIN_ID || '196');
+const WC_PROJECT_ID = process.env.NEXT_PUBLIC_WC_PROJECT_ID || '5e0237c8b46078873a253229145e1409';
 
 const NAV_LINKS = [
   { label: 'Marketplace', href: '/marketplace' },
@@ -38,7 +39,7 @@ export function Navbar() {
   }, [token]);
 
   const hasInjected = typeof window !== 'undefined' && !!(window as any).ethereum;
-  const hasWC       = !!process.env.NEXT_PUBLIC_WC_PROJECT_ID;
+  const hasWC       = true; // WalletConnect always available
 
   async function connectWith(connectorFn: any) {
     try {
@@ -72,7 +73,7 @@ export function Navbar() {
   function handleConnect() {
     // If only one option available, connect directly
     if (hasWC && !hasInjected) {
-      connectWith(walletConnect({ projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID! }));
+      connectWith(walletConnect({ projectId: WC_PROJECT_ID }));
     } else if (!hasWC && hasInjected) {
       connectWith(injected());
     } else {
@@ -485,7 +486,7 @@ export function Navbar() {
               )}
 
               {hasWC && (
-                <button onClick={() => connectWith(walletConnect({ projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID! }))} style={{
+                <button onClick={() => connectWith(walletConnect({ projectId: WC_PROJECT_ID }))} style={{
                   width: '100%', padding: '16px', borderRadius: 14, fontSize: 15, fontWeight: 700,
                   background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
                   color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center',
