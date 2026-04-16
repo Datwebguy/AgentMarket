@@ -182,7 +182,18 @@ class AgentMarketAPI {
     return data;
   }
 
-  async updateAgent(id: string, payload: Partial<Parameters<typeof this.deployAgent>[0]>): Promise<Agent> {
+  async updateAgent(id: string, payload: {
+    name?:             string;
+    description?:      string;
+    category?:         string;
+    endpointUrl?:      string;
+    code?:             string;
+    pricePerCallUsdc?: number;
+    tags?:             string[];
+    inputSchema?:      Record<string, unknown>;
+    outputSchema?:     Record<string, unknown>;
+    status?:           string;
+  }): Promise<Agent> {
     const { data } = await this.http.patch(`/agents/${id}`, payload);
     return data;
   }

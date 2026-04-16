@@ -26,7 +26,7 @@ function EditAgentModal({ agent, onClose, onSaved }: { agent: Agent; onClose: ()
         pricePerCallUsdc: parseFloat(price),
         ...(code        ? { code }        : {}),
         ...(endpointUrl ? { endpointUrl } : {}),
-        status: status as any,
+        status,
       });
       onSaved();
       onClose();
